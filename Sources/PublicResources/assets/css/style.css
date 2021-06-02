@@ -1,0 +1,42 @@
+body {
+  padding-top: 60;
+}
+
+
+header {
+	margin-top: 0px;
+}
+
+.bg-blue {
+	background-color: #008080;
+}
+
+
+.btn-blue {
+	background-color: #008080;
+	border-color: #008080;
+	color: #fff;
+}
+
+.btn-blue:hover {
+	background-color: #4b5fa0; 
+	border-color: #4b5fa0;
+	color: #fff;
+}
+
+.btn-white {
+	background-color: #fff; 
+	border-color: #fff;
+	color: #103488;
+}
+
+.btn-white:hover {
+	background-color: #dfe3f5; 
+	border-color: #dfe3f5;
+	color: #2a365e;
+}
+
+.center-vertically {
+	margin-top: auto;
+	margin-bottom: auto;
+}
