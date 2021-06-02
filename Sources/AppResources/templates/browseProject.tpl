@@ -1,9 +1,11 @@
+[START addDataButton]
 <div class="row">
     <div class="col-12">
         <a href="/addDataToProject?projectID={projectID}" class="btn btn-sm btn-success"><i class="fa fa-plus-circle"></i> Dodaj nowe dane</a>
         <hr>
     </div>
 </div>
+[END addDataButton]
 <div class="row">
     <div class="col-12">
         <table class="table table-sm table-striped">

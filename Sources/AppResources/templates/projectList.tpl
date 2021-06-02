@@ -14,7 +14,7 @@
               <td>{name}</td>
               <td>{status}</td>
               <td>
-                <a href="/browseProjectData?projectID={projectID}" class="btn btn-sm btn-primary"><i class="fa fa-database"></i> Przeglądaj dane</a>
+                <a href="/browseProjectDataAdmin?projectID={projectID}" class="btn btn-sm btn-primary"><i class="fa fa-database"></i> Przeglądaj dane</a>
                 <a href="/editProject?projectID={projectID}" class="btn btn-sm btn-warning">Edycja konfiguracji</a>
                 <a href="/deleteProject?projectID={projectID}" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Usuń</a>
               </td>

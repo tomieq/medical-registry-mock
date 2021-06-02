@@ -479,7 +479,25 @@ class WebApplication {
             
         }
         
-        // MARK: browse data in project
+        // MARK: browse data in project - admin
+        server.GET["/browseProjectDataAdmin"] = { request, responseHeaders in
+
+            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
+                return .notFound
+            }
+            
+            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
+            
+            navi.assign("title", "Dane")
+            navi.assign("page", self.prepareProjectDataTable(project, withAddButton: false))
+            
+            template.assign("page", navi.output())
+            return template.asResponse()
+            
+        }
+        
+        // MARK: browse data in project - user
         server.GET["/browseProjectData"] = { request, responseHeaders in
 
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
@@ -488,41 +506,9 @@ class WebApplication {
             
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
             let navi = Template(raw: Resource.getAppResource(relativePath: "templates/myProjectsNavi.tpl"))
-            let browser = Template(raw: Resource.getAppResource(relativePath: "templates/browseProject.tpl"))
-
-            browser.assign("projectID", project.id)
-            project.questions.forEach { question in
-                var variables: [String:String] = [:]
-                variables["name"] = question.label ?? "-"
-                browser.assign(variables: variables, inNest: "header")
-            }
-
-            project.entries.forEach { data in
-                var columns = ""
-                
-                for question in project.questions {
-                    let value = data.answers.filter{ $0.questionID == question.id }.first?.value ?? ""
-                    switch question.dataType {
-                    case .dictionary:
-                        let dictionaryValue = project.dictionaries
-                            .filter { $0.id == question.dictionaryID }
-                            .first?.options
-                            .filter{ $0.id == value }
-                            .first?.title ?? ""
-                        columns.append("<td>\(dictionaryValue)</td>")
-                    default:
-                        columns.append("<td>\(value)</td>")
-                    }
-                }
-                
-                var variables: [String:String] = [:]
-                variables["columns"] = columns
-                variables["projectID"] = project.id
-                variables["dataID"] = data.id
-                browser.assign(variables: variables, inNest: "row")
-            }
+            
             navi.assign("title", "Dane")
-            navi.assign("page", browser.output())
+            navi.assign("page", self.prepareProjectDataTable(project, withAddButton: true))
             
             template.assign("page", navi.output())
             return template.asResponse()
@@ -554,6 +540,46 @@ class WebApplication {
             Logger.error("Unhandled request", "File `\(filePath)` doesn't exist")
             return .notFound
         }
+    }
+    
+    private func prepareProjectDataTable(_ project: Project, withAddButton: Bool) -> String {
+        let browser = Template(raw: Resource.getAppResource(relativePath: "templates/browseProject.tpl"))
+
+        if withAddButton {
+            browser.assign(variables: nil, inNest: "addDataButton")
+        }
+        browser.assign("projectID", project.id)
+        project.questions.forEach { question in
+            var variables: [String:String] = [:]
+            variables["name"] = question.label ?? "-"
+            browser.assign(variables: variables, inNest: "header")
+        }
+
+        project.entries.forEach { data in
+            var columns = ""
+            
+            for question in project.questions {
+                let value = data.answers.filter{ $0.questionID == question.id }.first?.value ?? ""
+                switch question.dataType {
+                case .dictionary:
+                    let dictionaryValue = project.dictionaries
+                        .filter { $0.id == question.dictionaryID }
+                        .first?.options
+                        .filter{ $0.id == value }
+                        .first?.title ?? ""
+                    columns.append("<td>\(dictionaryValue)</td>")
+                default:
+                    columns.append("<td>\(value)</td>")
+                }
+            }
+            
+            var variables: [String:String] = [:]
+            variables["columns"] = columns
+            variables["projectID"] = project.id
+            variables["dataID"] = data.id
+            browser.assign(variables: variables, inNest: "row")
+        }
+        return browser.output()
     }
     
     private func initConfiguration() {
