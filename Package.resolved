@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Swifter",
+        "repositoryURL": "https://github.com/tomieq/swifter.git",
+        "state": {
+          "branch": null,
+          "revision": "ab5e3a08bdb096af255755e6a19e5037428fa666",
+          "version": "1.5.5"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
