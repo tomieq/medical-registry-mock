@@ -27,59 +27,33 @@
 
 <body>
   <!-- Header -->
-  <header class="bg-blue pb-5 mb-4 text-white">
-    <div class="container h-100">
+  <header class="mb-1 text-purple">
+    <div class="gray-shadow">
 
-      <nav class="navbar navbar-expand-lg navbar-dark">
-        <a class="navbar-brand" href="/">Home</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav">
-            <li class="nav-item active">
-              <a class="nav-link" href="/projectList">Perspektywa admina</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/myProjects">Perspektywa lekarza</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
-      <div class="row h-100 align-items-center">
-
-        <div class="col-12">
-          <h1 class="display-4 text-white mt-5 mb-2 text-center">Rejestr Hematologiczny Mock</h1>
+        <div class="col-12 pb-4">
+        <img class="img-fluid app-logo"  src="assets/images/logo.png" />
+          <span class="app-name">Rejestr hematologiczny</span>
 
         </div>
-      </div>
     </div>
   </header>
 
 
 
 
-  <!-- Page Content -->
-  <div class="container">
   
-        {inline_notice_failure}
-        {inline_notice_warning}
-        {inline_notice_success}
-        {inline_notice_info}
+    {inline_notice_failure}
+    {inline_notice_warning}
+    {inline_notice_success}
+    {inline_notice_info}
 
         {page}
 
-  </div>
-  <!-- /.container -->
 
   <!-- Footer -->
-  <footer class="mt-5 py-5 bg-dark">
-    <div class="container">
-      <p class="m-0 text-center text-white">Wszelkie prawa zastrzeżone &copy; Rejestr Hematologiczny 2021</p>
-      <p class="text-center font-weight-light text-muted">v1.0.0</p>
+  <footer>
+      COPYRIGHT © 2021 <a href="https://fundacja.hematologiczna.org/">Fundacja hematologiczna</a>, All rights Reserved
     </div>
-    <!-- /.container -->
   </footer>
 
   <!-- Bootstrap core JavaScript -->
