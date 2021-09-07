@@ -33,6 +33,16 @@ class WebApplication {
             return template.asResponse()
         }
         
+        // MARK: login
+        server.GET["/login"] = { request, responseHeaders in
+
+            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
+            
+            template.assign("page", loginView.output())
+            return template.asResponse()
+        }
+        
         // MARK: reset
         server.GET["/reset"] = { request, responseHeaders in
 
