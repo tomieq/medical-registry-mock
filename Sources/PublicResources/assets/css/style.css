@@ -46,6 +46,10 @@ a:hover {
     color: #5E5873;
 }
 
+.text-light-gray {
+    color: #908AA5;
+}
+
 .text-small {
     font-size: 13px;
 }

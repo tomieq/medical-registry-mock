@@ -53,9 +53,28 @@ class WebApplication {
         // MARK: dashboard
         server["/dashboard"] = { request, responseHeaders in
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            //let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
+            let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
             
-            //template.assign("page", loginView.output())
+            var cardProjects: [String:String] = [:]
+            cardProjects["title"] = "Projekty"
+            cardProjects["desc"] = "Dodawaj lub modyfikuj dodane przez siebie dane, w swoich projektach lub w projektach innych użytkowników, w których bierzesz udział."
+            cardProjects["url"] = "/projects"
+            
+            var cardNewProject: [String:String] = [:]
+            cardNewProject["title"] = "Nowy projekt"
+            cardNewProject["desc"] = "Stwórz nowy projekt, w którym będziesz mógł zbierać dane o pacjentach i zaprosić innych użytkowników do kontrybuowania w projekcie."
+            cardNewProject["url"] = "#"
+            
+            var cardEditProject: [String:String] = [:]
+            cardEditProject["title"] = "Edytuj istniejący projekt"
+            cardEditProject["desc"] = "Edytuj istniejący projekt, który jeszcze nie wystartował."
+            cardEditProject["url"] = "#"
+            
+            cardView.assign(variables: cardProjects, inNest: "card")
+            cardView.assign(variables: cardNewProject, inNest: "card")
+            cardView.assign(variables: cardEditProject, inNest: "card")
+            
+            template.assign("page", cardView.output())
             return template.asResponse()
         }
         
