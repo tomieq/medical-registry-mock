@@ -5,14 +5,14 @@
     </div>
     <div class="col-4 center-vertically">
         <div class="title">Zaloguj się</div>
-        <form>
+        <form method="post">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="john@example.com">
+                <input type="email" name="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="john@example.com">
             </div>
             <div class="form-group">
                 <label for="password" class="text-left">Hasło</label>
-                <input type="password" class="form-control" id="email" aria-describedby="emailHelp" placeholder="••••••••••">
+                <input type="password" name="password" class="form-control" id="email" aria-describedby="emailHelp" placeholder="••••••••••">
             </div>
             <div><input type="submit" class="btn btn-purple w-100" value="Zaloguj" /></div>
         </form>

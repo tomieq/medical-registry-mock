@@ -25,17 +25,16 @@ class WebApplication {
         // MARK: welcome
         server.GET["/"] = { request, responseHeaders in
 
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let welcome = Template(raw: Resource.getAppResource(relativePath: "templates/welcome.tpl"))
-            welcome.assign("token", UUID().uuidString)
-            
-            template.assign("page", welcome.output())
-            return template.asResponse()
+            return .movedTemporarily("/login")
         }
         
         // MARK: login
-        server.GET["/login"] = { request, responseHeaders in
+        server["/login"] = { request, responseHeaders in
 
+            let formData = request.flatFormData()
+            if formData["email"] == "user.one@example.com", formData["password"] == "user1" {
+                return .movedTemporarily("/dashboard")
+            }
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
             let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
             
@@ -49,6 +48,15 @@ class WebApplication {
             self.projects = []
             self.initConfiguration()
             return .movedPermanently("/projectList")
+        }
+        
+        // MARK: dashboard
+        server["/dashboard"] = { request, responseHeaders in
+            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            //let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
+            
+            //template.assign("page", loginView.output())
+            return template.asResponse()
         }
         
         // MARK: all project list
