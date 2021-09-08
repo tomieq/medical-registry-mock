@@ -21,11 +21,11 @@
     <input type="hidden" name="{name}" value="{value}">
 [END hidden]
 [START submit]
-  <button type="submit" name="{name}" class="btn btn-primary">{label}</button>
+  <button type="submit" name="{name}" class="btn btn-purple">{label}</button>
 [END submit]
 [START text]
   <div class="form-group">
-    <label for="{id}">{label}</label>
+    <label for="{id}" class="{labelCSSClass}">{label}</label>
     <input type="text" class="form-control" id="{id}" value="{value}" name="{name}" placeholder="{placeholder}">
   </div>
 [END text]

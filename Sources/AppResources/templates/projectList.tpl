@@ -1,22 +1,24 @@
-<div class="row">
+<div class="mt-2 mb-2">
+    <a href="/addProject" class="btn btn-purple">+ Dodaj Projekt</a>
+</div>
+
+<div class="row mt-2">
     <div class="col-12">
         <table class="table table-sm table-striped">
           <thead>
             <tr>
-              <th scope="col">Nazwa</th>
-              <th scope="col">Status</th>
-              <th scope="col">Akcje</th>
+              <th scope="col">NAZWA</th>
+              <th scope="col">STATUS</th>
+              <th scope="col">WŁAŚCICIEL</th>
             </tr>
           </thead>
           <tbody>
             [START project]
             <tr>
               <td>{name}</td>
-              <td>{status}</td>
+              <td><span class="label label-purple">{status}</span></td>
               <td>
-                <a href="/browseProjectDataAdmin?projectID={projectID}" class="btn btn-sm btn-primary"><i class="fa fa-database"></i> Przeglądaj dane</a>
-                <a href="/editProject?projectID={projectID}" class="btn btn-sm btn-warning">Edycja konfiguracji</a>
-                <a href="/deleteProject?projectID={projectID}" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Usuń</a>
+                {owner}
               </td>
             </tr>
             [END project]

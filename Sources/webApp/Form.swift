@@ -33,12 +33,13 @@ class Form {
     }
     
     @discardableResult
-    func addInputText(name: String, label: String, value: String = "") -> Form {
+    func addInputText(name: String, label: String, value: String = "", labelCSSClass: String = "") -> Form {
         var variables: [String:String] = [:]
         variables["label"] = label
         variables["id"] = self.randomString(length: 10)
         variables["name"] = name
         variables["value"] = value
+        variables["labelCSSClass"] = labelCSSClass
         self.template.assign(variables: variables, inNest: "text")
         self.html.append(self.template.output())
         self.template.reset()

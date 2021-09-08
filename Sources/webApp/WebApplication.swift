@@ -19,6 +19,7 @@ class WebApplication {
         server.middleware.append { request, responseHeaders in
             request.disableKeepAlive = true
             responseHeaders.addHeader("Cache-Control", "max-age=1, must-revalidate")
+            Logger.debug("Incoming", request.path)
             return nil
         }
         
@@ -55,6 +56,7 @@ class WebApplication {
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Strona główna"])
+            container.assign(variables: ["title" : "Strona główna"], inNest: "item")
             let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
             
             var cardProjects: [String:String] = [:]
@@ -81,11 +83,13 @@ class WebApplication {
             return template.asResponse()
         }
         
-        // MARK: all project list
-        server.GET["/projectList"] = { request, responseHeaders in
-
+        // MARK: projects
+        server["/projects"] = { request, responseHeaders in
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
+            let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
+            container.assign(variables: ["title" : "Projekty"])
+            container.assign(variables: ["title" : "Projekty"], inNest: "item")
+ 
             let list = Template(raw: Resource.getAppResource(relativePath: "templates/projectList.tpl"))
 
             self.projects.forEach { project in
@@ -95,39 +99,40 @@ class WebApplication {
                 data["status"] = project.status.title
                 list.assign(variables: data, inNest: "project")
             }
-
-            navi.assign("title", "Lista projektów")
-            navi.assign("page", list.output())
             
-            template.assign("page", navi.output())
+            container.assign("page", list.output())
+            template.assign("page", container.output())
             return template.asResponse()
         }
         
-        // MARK: add project form
-        server.GET["/newProject"] = { request, responseHeaders in
-            
+        // MARK: add project
+        server.GET["/addProject"] = { request, responseHeaders in
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
+            let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
+            container.assign(variables: ["title" : "Projekty"])
+            container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
+            container.assign(variables: ["title" : "Dodaj projekt"], inNest: "item")
+ 
+            let wrapper = Template(raw: Resource.getAppResource(relativePath: "templates/projectAddView.tpl"))
 
+            
             let form = Form(url: "/newProject", method: "POST")
-                .addInputText(name: "name", label: "Nazwa projektu")
+                .addInputText(name: "name", label: "Podaj nazwę projektu", labelCSSClass: "text-gray font-22")
                 .addSubmit(name: "submit", label: "Dodaj")
-
-            navi.assign("title", "Utwórz nowy projekt")
-            navi.assign("page", form.output())
-
-            template.assign("page", navi.output())
+            wrapper.assign("form", form.output())
+            container.assign("page", wrapper.output())
+            template.assign("page", container.output())
             return template.asResponse()
         }
         
         // MARK: add project action
-        server.POST["/newProject"]  = { request, responseHeaders in
+        server.POST["/addProject"]  = { request, responseHeaders in
             let formData = request.flatFormData()
             
             let project = Project()
             project.name = formData["name"] ?? "brak nazwy"
             self.projects.append(project)
-            return .movedPermanently("/projectList")
+            return .movedPermanently("/projects")
         }
         
         // MARK: delete project action
