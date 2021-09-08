@@ -53,6 +53,8 @@ class WebApplication {
         // MARK: dashboard
         server["/dashboard"] = { request, responseHeaders in
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
+            container.assign(variables: ["title" : "Strona główna"])
             let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
             
             var cardProjects: [String:String] = [:]
@@ -74,7 +76,8 @@ class WebApplication {
             cardView.assign(variables: cardNewProject, inNest: "card")
             cardView.assign(variables: cardEditProject, inNest: "card")
             
-            template.assign("page", cardView.output())
+            container.assign("page", cardView.output())
+            template.assign("page", container.output())
             return template.asResponse()
         }
         
