@@ -15,7 +15,10 @@
 
   <!-- Custom styles for this template -->
   <link href="assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
+  <link href="assets/css/font.css?v=1.1" rel="stylesheet">
+  <link href="assets/css/theme.css?v=1.1" rel="stylesheet">
   <link href="assets/css/style.css?v=1.1" rel="stylesheet">
+  <link href="assets/css/table.css?v=1.1" rel="stylesheet">
   [START css]
   <link href="{src}" rel="stylesheet">
   [END css]
@@ -33,7 +36,7 @@
 
         <div class="col-12 pb-4">
         <img class="img-fluid app-logo"  src="assets/images/logo.png" />
-          <span class="app-name">Rejestr hematologiczny</span>
+          <span class="font-24">Rejestr hematologiczny</span>
 
         </div>
     </div>

@@ -1,0 +1,54 @@
+a {
+    color: #7367F0;
+}
+
+a:hover {
+    color: #7367F0;
+    text-shadow : 0 0 0 #7367F0;
+    text-decoration: none;
+}
+
+.bg-purple {
+    background-color: #7367F0;
+}
+
+.text-purple {
+    color: #7367F0;
+}
+
+.text-gray {
+    color: #5E5873;
+}
+
+.text-light-gray {
+    color: #908AA5;
+}
+
+.gray-shadow {
+    box-shadow: 0px 10px 15px -5px #DEDEDE;
+}
+
+.btn-purple {
+    font-size: 14px;
+    background-color: #7367F0;
+    border-color: #7367F0;
+    color: #fff;
+}
+
+.btn-purple:hover {
+    background-color: #7367F0;
+    border-color: #7367F0;
+    color: #fff;
+    box-shadow: 0px 5px 15px -5px #9185FF;
+}
+
+.label-purple {
+    color: #7367F0;
+    background-color: #E6E5F8;
+    padding: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-family: MontserratSemiBold;
+    border-radius: 5px;
+    font-size: 13px;
+}
