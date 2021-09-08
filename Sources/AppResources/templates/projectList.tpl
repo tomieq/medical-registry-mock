@@ -15,7 +15,7 @@
           <tbody>
             [START project]
             <tr>
-              <td>{name}</td>
+              <td><a href="/editProject?projectID={projectID}" class="text-gray">{name}</a></td>
               <td><span class="label label-purple">{status}</span></td>
               <td>
                 {owner}

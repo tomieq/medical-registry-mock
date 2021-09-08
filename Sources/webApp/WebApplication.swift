@@ -150,43 +150,42 @@ class WebApplication {
                 return .notFound
             }
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
+            let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
+            container.assign(variables: ["title" : "Projekty"])
+            container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
+            container.assign(variables: ["title" : "Dodaj projekt"], inNest: "item")
+            
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
 
-            project.questions.forEach { question in
-                var data = [String:String]()
-                data["question"] = question.label
-                data["questionID"] = question.id
-                data["type"] = question.dataType.title
-                data["projectID"] = project.id
-                
-                switch question.dataType {
-                case .number:
-                    let extra = ", zakres od \(question.minValue.toOptionalString() ?? "-∞") do \(question.maxValue.toOptionalString() ?? "+∞")"
-                    data["extra"] = extra
-                case .dictionary:
-                    let dictionary = project.dictionaries.filter{ $0.id == question.dictionaryID }.first?.name ?? ""
-                    data["extra"] = " \(dictionary)"
-                default:
-                    break
-                }
-                page.assign(variables: data, inNest: "question")
-            }
+            let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
             
-            project.dictionaries.forEach { dictionary in
-                var data = [String:String]()
-                data["dictionary"] = dictionary.name
-                data["dictionaryID"] = dictionary.id
-                data["options"] = dictionary.options.map{ $0.title }.joined(separator: " / ")
-                page.assign(variables: data, inNest: "dictionary")
-            }
+            var cardGroup: [String:String] = [:]
+            cardGroup["title"] = "Dodaj grupę/podgrupę"
+            cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
+            cardGroup["url"] = "#"
             
-            page.assign("projectID", project.id)
-
-            navi.assign("title", "Edycja projektu \(project.name)")
-            navi.assign("page", page.output())
-
-            template.assign("page", navi.output())
+            var cardParameter: [String:String] = [:]
+            cardParameter["title"] = "Dodaj parametr"
+            cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
+            cardParameter["url"] = "#"
+            
+            var cardDictionary: [String:String] = [:]
+            cardDictionary["title"] = "Edytuj słowniki"
+            cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
+            cardDictionary["url"] = "#"
+            
+            cardView.assign(variables: cardGroup, inNest: "card")
+            cardView.assign(variables: cardParameter, inNest: "card")
+            cardView.assign(variables: cardDictionary, inNest: "card")
+            
+            page.assign("cards", cardView.output())
+            var templateVariables: [String:String] = [:]
+            templateVariables["projectName"] = project.name
+            templateVariables["projectID"] = project.id
+            page.assign(variables: templateVariables)
+            
+            container.assign("page", page.output())
+            template.assign("page", container.output())
             return template.asResponse()
         }
         
