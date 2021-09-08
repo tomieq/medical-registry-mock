@@ -3,6 +3,15 @@
     src: url(../fonts/Montserrat/Montserrat-Regular.ttf);
 }
 
+@font-face {
+    font-family: MontserratSemiBold;
+    src: url(../fonts/Montserrat/Montserrat-SemiBold.ttf);
+}
+
+.semi-bold {
+    font-family: MontserratSemiBold;
+}
+
 html, body, .full {
   height: 100%;
 }
