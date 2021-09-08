@@ -27,7 +27,7 @@
 </head>
 
 <body>
-  <!-- Header -->
+  <div class="full">
   <header class="mb-1 text-purple">
     <div class="gray-shadow">
 
@@ -38,25 +38,20 @@
         </div>
     </div>
   </header>
-
-
-
-
   
     {inline_notice_failure}
     {inline_notice_warning}
     {inline_notice_success}
     {inline_notice_info}
 
-        {page}
+    {page}
 
-
-  <!-- Footer -->
   <footer>
+    <div class="mb-2">
       COPYRIGHT © 2021 <a href="https://fundacja.hematologiczna.org/">Fundacja hematologiczna</a>, All rights Reserved
     </div>
   </footer>
-
+  </div>
   <!-- Bootstrap core JavaScript -->
   <script src="assets/vendor/jquery/jquery.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
