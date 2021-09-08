@@ -1,6 +1,11 @@
+@font-face {
+    font-family: MontserratRegular;
+    src: url(../fonts/Montserrat/Montserrat-Regular.ttf);
+}
+
 body {
   padding-top: 60;
-  font-family: Verdana;
+  font-family: MontserratRegular;
   padding-left: 40px;
   padding-right: 40px;
 }
