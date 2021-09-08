@@ -36,7 +36,7 @@ class WebApplication {
             if formData["email"] == "user.one@example.com", formData["password"] == "user1" {
                 return .movedTemporarily("/dashboard")
             }
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let template = self.getMainTemplate(request)
             let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
             
             template.assign("page", loginView.output())
@@ -53,7 +53,7 @@ class WebApplication {
         
         // MARK: dashboard
         server["/dashboard"] = { request, responseHeaders in
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let template = self.getMainTemplate(request)
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Strona główna"])
             container.assign(variables: ["title" : "Strona główna"], inNest: "item")
@@ -85,7 +85,7 @@ class WebApplication {
         
         // MARK: projects
         server["/projects"] = { request, responseHeaders in
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let template = self.getMainTemplate(request)
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Projekty"])
             container.assign(variables: ["title" : "Projekty"], inNest: "item")
@@ -107,7 +107,7 @@ class WebApplication {
         
         // MARK: add project
         server.GET["/addProject"] = { request, responseHeaders in
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let template = self.getMainTemplate(request)
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Projekty"])
             container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
@@ -149,7 +149,12 @@ class WebApplication {
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+            let template = self.getMainTemplate(request)
+            let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
+            let avatarUrl = "https://www.gravatar.com/avatar/5ede5914f659676c0295d5282c1c9df9"
+            userBadge.assign("avatarUrl", avatarUrl)
+            template.assign("userBadge", userBadge.output())
+            
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Projekty"])
             container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
@@ -700,5 +705,14 @@ class WebApplication {
         sampleProject.questions.append(q6)
         
         self.projects.append(sampleProject)
+    }
+    
+    private func getMainTemplate(_ request: HttpRequest) -> Template {
+        let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
+        let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
+        let avatarUrl = "https://www.gravatar.com/avatar/5ede5914f659676c0295d5282c1c9df9"
+        userBadge.assign("avatarUrl", avatarUrl)
+        template.assign("userBadge", userBadge.output())
+        return template
     }
 }

@@ -35,6 +35,7 @@
     <div class="gray-shadow">
 
         <div class="col-12 pb-4">
+        {userBadge}
         <img class="img-fluid app-logo"  src="assets/images/logo.png" />
           <span class="font-24">Rejestr hematologiczny</span>
 
