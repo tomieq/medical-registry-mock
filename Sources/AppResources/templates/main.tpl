@@ -60,10 +60,14 @@
   <!-- Bootstrap core JavaScript -->
   <script src="assets/vendor/jquery/jquery.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/feather/feather.min.js"></script>
   <script src="assets/js/common.js"></script>
   [START js]
   <script src="{src}"></script>
   [END js]
+  <script>
+    feather.replace();
+  </script>
   <script>
   <!-- Begin
   [START jscode]
