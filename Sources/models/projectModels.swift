@@ -29,12 +29,19 @@ class Project {
     let id: String = UUID().uuidString
     var ownerID: String?
     var name: String = ""
+    var groups: [ProjectGroup] = []
     var questions: [ProjectQuestion] = []
     var questionsForSeries: [ProjectQuestion] = []
     var entries: [DataEntry] = []
     var status: ProjectStatus = .created
     var dictionaries: [ProjectDictionary] = []
     var data: [DataEntry] = []
+}
+
+class ProjectGroup {
+    let id: String = UUID().uuidString
+    var name: String = ""
+    var groups: [ProjectGroup] = []
 }
 
 enum ProjectQuestionType: String, CaseIterable {

@@ -185,10 +185,6 @@ class WebApplication {
             cardView.assign(variables: cardDictionary, inNest: "card")
             
             page.assign("cards", cardView.output())
-            var templateVariables: [String:String] = [:]
-            templateVariables["projectName"] = project.name
-            templateVariables["projectID"] = project.id
-            page.assign(variables: templateVariables)
             
             if let parentGroupID = request.queryParam("addGroup") {
                 let form = Form(url: "/addGroup", method: "POST")
@@ -200,6 +196,21 @@ class WebApplication {
                 page.assign(variables: ["form":form.output()], inNest: "addGroup")
             }
             
+            let activeGroup = request.queryParam("groupID")
+            for group in project.groups {
+                var data: [String:String] = [:]
+                data["projectID"] = project.id
+                data["name"] = group.name
+                data["groupID"] = group.id
+                data["css"] = group.id == activeGroup ? "treeItemActive" : "treeItemInactive"
+                page.assign(variables: data, inNest: "group")
+            }
+            var templateVariables: [String:String] = [:]
+            templateVariables["projectName"] = project.name
+            templateVariables["projectID"] = project.id
+            templateVariables["css"] = activeGroup == nil ? "treeItemActive" : "treeItemInactive"
+            page.assign(variables: templateVariables)
+            
             container.assign("page", page.output())
             template.assign("page", container.output())
             return template.asResponse()
@@ -207,6 +218,13 @@ class WebApplication {
         
         server.POST["/addGroup"] = { request, responseHeaders in
             let formData = request.flatFormData()
+            guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first) else {
+                return .notFound
+            }
+            let group = ProjectGroup()
+            group.name = formData["name"] ?? "bez nazwy"
+            project.groups.append(group)
+            
             return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
         }
         
