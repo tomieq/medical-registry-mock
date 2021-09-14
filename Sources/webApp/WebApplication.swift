@@ -18,7 +18,7 @@ class WebApplication {
         
         server.middleware.append { request, responseHeaders in
             request.disableKeepAlive = true
-            responseHeaders.addHeader("Cache-Control", "max-age=1, must-revalidate")
+            //responseHeaders.addHeader("Cache-Control", "max-age=1, must-revalidate")
             Logger.debug("Incoming", request.path)
             return nil
         }
@@ -144,11 +144,12 @@ class WebApplication {
         }
         
         // MARK: edit project
-        server.GET["editProject"] = { request, responseHeaders in
+        server["editProject"] = { request, responseHeaders in
             
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
+            let url = "/editProject?projectID=\(project.id)"
             let template = self.getMainTemplate(request)
             let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
             let avatarUrl = "https://www.gravatar.com/avatar/5ede5914f659676c0295d5282c1c9df9"
@@ -167,7 +168,7 @@ class WebApplication {
             var cardGroup: [String:String] = [:]
             cardGroup["title"] = "Dodaj grupę/podgrupę"
             cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
-            cardGroup["url"] = "#"
+            cardGroup["url"] = "\(url)&addGroup=root"
             
             var cardParameter: [String:String] = [:]
             cardParameter["title"] = "Dodaj parametr"
@@ -189,9 +190,24 @@ class WebApplication {
             templateVariables["projectID"] = project.id
             page.assign(variables: templateVariables)
             
+            if let parentGroupID = request.queryParam("addGroup") {
+                let form = Form(url: "/addGroup", method: "POST")
+                    .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "parentGroupID", value: parentGroupID)
+                    .addSubmit(name: "submit", label: "Dodaj")
+                    .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
+                page.assign(variables: ["form":form.output()], inNest: "addGroup")
+            }
+            
             container.assign("page", page.output())
             template.assign("page", container.output())
             return template.asResponse()
+        }
+        
+        server.POST["/addGroup"] = { request, responseHeaders in
+            let formData = request.flatFormData()
+            return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
         }
         
         // MARK: delete question action

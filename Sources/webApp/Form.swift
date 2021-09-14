@@ -58,6 +58,12 @@ class Form {
     }
     
     @discardableResult
+    func addRaw(html: String) -> Form {
+        self.html.append(html)
+        return self
+    }
+    
+    @discardableResult
     func addHidden(name: String, value: String) -> Form {
         var variables: [String:String] = [:]
         variables["name"] = name

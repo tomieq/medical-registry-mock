@@ -42,6 +42,20 @@ a:hover {
     box-shadow: 0px 5px 15px -5px #9185FF;
 }
 
+.btn-purple-negative {
+    font-size: 14px;
+    background-color: #fff;
+    border-color: #7367F0;
+    color: #7367F0;
+}
+
+.btn-purple-negative:hover {
+    background-color: #fff;
+    border-color: #7367F0;
+    color: #7367F0;
+    box-shadow: 0px 5px 15px -5px #9185FF;
+}
+
 .label {
     padding: 3px;
     padding-left: 10px;
