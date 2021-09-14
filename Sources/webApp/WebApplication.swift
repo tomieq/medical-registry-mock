@@ -36,7 +36,7 @@ class WebApplication {
             if formData["email"] == "user.one@example.com", formData["password"] == "user1" {
                 return .movedTemporarily("/dashboard")
             }
-            let template = self.getMainTemplate(request)
+            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
             let loginView = Template(raw: Resource.getAppResource(relativePath: "templates/loginView.tpl"))
             
             template.assign("page", loginView.output())
