@@ -116,7 +116,7 @@ class WebApplication {
             let wrapper = Template(raw: Resource.getAppResource(relativePath: "templates/projectAddView.tpl"))
 
             
-            let form = Form(url: "/newProject", method: "POST")
+            let form = Form(url: "/addProject", method: "POST")
                 .addInputText(name: "name", label: "Podaj nazwę projektu", labelCSSClass: "text-gray font-22")
                 .addSubmit(name: "submit", label: "Dodaj")
             wrapper.assign("form", form.output())
@@ -136,7 +136,7 @@ class WebApplication {
         }
         
         // MARK: delete project action
-        server.GET["deleteProject"]  = { request, responseHeaders in
+        server.GET["/deleteProject"]  = { request, responseHeaders in
             if let id = request.queryParam("projectID") {
                 self.projects = self.projects.filter { $0.id != id }
             }
@@ -149,6 +149,11 @@ class WebApplication {
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
+            
+            if let deleteGroupID = request.queryParam("deleteGroupID") {
+                project.groups = project.groups.filter { $0.id != deleteGroupID }
+            }
+            
             let url = "/editProject?projectID=\(project.id)"
             let template = self.getMainTemplate(request)
             let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
@@ -196,14 +201,27 @@ class WebApplication {
                 page.assign(variables: ["form":form.output()], inNest: "addGroup")
             }
             
+            if let renameGroupID = request.queryParam("renameGroupID"), let group = (project.groups.first { $0.id == renameGroupID }) {
+                let form = Form(url: "/renameGroup", method: "POST")
+                    .addInputText(name: "name", label: "Nazwa Grupy", value: group.name, labelCSSClass: "text-gray font-13")
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "renameGroupID", value: group.id)
+                    .addSubmit(name: "submit", label: "Zmień")
+                    .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
+                page.assign(variables: ["form":form.output()], inNest: "addGroup")
+            }
+            
             let activeGroup = request.queryParam("groupID")
             for group in project.groups {
                 var data: [String:String] = [:]
                 data["projectID"] = project.id
                 data["name"] = group.name
                 data["groupID"] = group.id
+                data["deleteURL"] = "\(url)&deleteGroupID=\(group.id)"
+                data["renameURL"] = "\(url)&renameGroupID=\(group.id)"
                 data["css"] = group.id == activeGroup ? "treeItemActive" : "treeItemInactive"
                 page.assign(variables: data, inNest: "group")
+                page.assign(variables: data, inNest: "groupItem")
             }
             var templateVariables: [String:String] = [:]
             templateVariables["projectName"] = project.name
@@ -224,6 +242,18 @@ class WebApplication {
             let group = ProjectGroup()
             group.name = formData["name"] ?? "bez nazwy"
             project.groups.append(group)
+            
+            return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
+        }
+        
+        server.POST["/renameGroup"] = { request, responseHeaders in
+            let formData = request.flatFormData()
+            guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first),
+                  let renameGroupID = formData["renameGroupID"],
+                  let group = (project.groups.first { $0.id == renameGroupID }) else {
+                return .notFound
+            }
+            group.name = formData["name"] ?? "bez nazwy"
             
             return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
         }
