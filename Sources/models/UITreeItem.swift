@@ -21,6 +21,7 @@ struct UITreeItem {
         data["css"] = self.isActive ? "treeItemActive" : "treeItemInactive"
         data["margin"] = "\(self.nestLevel * 20)"
         data["side"] = self.hasChildren ? "down" : "right"
+        data["icon"] = self.hasChildren ? "layers" : "file-text"
         return data
     }
 }

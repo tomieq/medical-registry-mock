@@ -5,7 +5,7 @@
 [END form]
 [START label]
   <div class="form-group">
-    <label for="{id}">{label}</label>
+    <label for="{id}" class="{labelCSSClass}">{label}</label>
     <div id="{id}">
         {inputHTML}
     </div>

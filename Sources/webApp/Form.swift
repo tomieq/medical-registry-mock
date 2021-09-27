@@ -88,7 +88,7 @@ class Form {
     }
     
     @discardableResult
-    func addRadio(name: String, label: String, options: [FormRadioModel], checked: String? = nil) -> Form {
+    func addRadio(name: String, label: String, options: [FormRadioModel], checked: String? = nil, labelCSSClass: String = "") -> Form {
         
         var radioHTML = ""
         options.forEach { option in
@@ -106,6 +106,8 @@ class Form {
         }
         var variables: [String:String] = [:]
         variables["label"] = label
+        variables["id"] = self.randomString(length: 10)
+        variables["labelCSSClass"] = labelCSSClass
         variables["inputHTML"] = radioHTML
         self.template.assign(variables: variables, inNest: "label")
         self.html.append(self.template.output())

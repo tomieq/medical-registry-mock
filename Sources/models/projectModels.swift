@@ -30,8 +30,6 @@ class Project {
     var ownerID: String?
     var name: String = ""
     var groups: [ProjectGroup] = []
-    var questions: [ProjectQuestion] = []
-    var questionsForSeries: [ProjectQuestion] = []
     var entries: [DataEntry] = []
     var status: ProjectStatus = .created
     var dictionaries: [ProjectDictionary] = []
@@ -46,9 +44,14 @@ class ProjectGroup {
     let id: String = UUID().uuidString
     var name: String = ""
     var groups: [ProjectGroup] = []
+    var questions: [ProjectQuestion] = []
     
     func findGroup(id: String) -> ProjectGroup? {
-        return self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
+        self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
+    }
+    
+    func findQuestion(id: String) -> ProjectQuestion? {
+        self.questions.first { $0.id == id }
     }
 }
 
@@ -100,6 +103,7 @@ class ProjectDictionaryOption: Equatable {
 
 class ProjectQuestion {
     let id: String = UUID().uuidString
+    let createDate = Date()
     var label: String?
     var dataType: ProjectQuestionType = .unknown
     var visibleOnList: Bool = false
