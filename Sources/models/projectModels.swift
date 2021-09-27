@@ -38,6 +38,11 @@ class Project {
     func findGroup(id: String) -> ProjectGroup? {
         return self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
     }
+    
+    func removeGroup(id: String) {
+        self.groups = self.groups.filter { $0.id != id }
+        self.groups.forEach{ $0.removeGroup(id: id) }
+    }
 }
 
 class ProjectGroup {
@@ -52,6 +57,11 @@ class ProjectGroup {
     
     func findQuestion(id: String) -> ProjectQuestion? {
         self.questions.first { $0.id == id }
+    }
+    
+    func removeGroup(id: String) {
+        self.groups = self.groups.filter { $0.id != id }
+        self.groups.forEach{ $0.removeGroup(id: id) }
     }
 }
 

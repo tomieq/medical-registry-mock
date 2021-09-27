@@ -155,10 +155,6 @@ class WebApplication {
                 activeGroup = project.findGroup(id: groupID)
             }
             
-            if let deleteGroupID = request.queryParam("deleteGroupID") {
-                project.groups = project.groups.filter { $0.id != deleteGroupID }
-            }
-            
             let url = "/editProject?projectID=\(project.id)"
             let template = self.getMainTemplate(request)
             let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
@@ -173,11 +169,15 @@ class WebApplication {
             
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
 
-            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, editProjectUrl: url)
             
             if let action = request.queryParam("action") {
                 let cancelUrl = "\(url)&groupID=\(activeGroup?.id ?? "")"
                 switch action {
+                case "deleteGroup":
+                    project.removeGroup(id: activeGroup?.id ?? "")
+                    activeGroup = nil
+                case "deleteQuestion":
+                    activeGroup?.questions = activeGroup?.questions.filter{ $0.id != request.queryParam("questionID") } ?? []
                 case "addGroup":
                     let form = Form(url: "/addGroup", method: "POST")
                         .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
@@ -250,7 +250,7 @@ class WebApplication {
                             return .movedPermanently(cancelUrl)
                         }
                         let question = ProjectQuestion()
-                        question.label = formData["label"]
+                        question.label = formData["label"] ?? "Brak nazwy"
                         question.dataType = questionType
                         question.maxValue = formData["maxValue"]?.toInt()
                         question.minValue = formData["minValue"]?.toInt()
@@ -267,8 +267,7 @@ class WebApplication {
                     break
                 }
             }
-            
-            
+            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, editProjectUrl: url)
             for group in project.groups {
                 self.addGroupToTreeMenu(page, group: group, activeGroup: activeGroup, editProjectUrl: url)
             }
@@ -277,12 +276,11 @@ class WebApplication {
                 let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditQuestionList.tpl"))
                 for question in activeGroup?.questions ?? [] {
                     var data: [String:String] = [:]
-                    data["projectID"] = project.id
                     data["name"] = question.label
                     data["createDate"] = question.createDate.getFormattedDate(format: "yyyy-MM-dd")
                     data["type"] = question.dataType.title
                     data["questionID"] = question.id
-                    data["deleteURL"] = "\(url)&groupID=\(group.id)&action=deleteQuestion"
+                    data["deleteURL"] = "\(url)&groupID=\(group.id)&questionID=\(question.id)&action=deleteQuestion"
                     data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"
                     
                     switch question.dataType {
