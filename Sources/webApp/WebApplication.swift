@@ -175,24 +175,28 @@ class WebApplication {
 
             self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, editProjectUrl: url)
             
-            if let parentGroupID = request.queryParam("addGroup") {
-                let form = Form(url: "/addGroup", method: "POST")
-                    .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
-                    .addHidden(name: "projectID", value: project.id)
-                    .addHidden(name: "parentGroupID", value: parentGroupID)
-                    .addSubmit(name: "submit", label: "Dodaj")
-                    .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
-                page.assign(variables: ["form":form.output()], inNest: "addGroup")
-            }
-            
-            if let renameGroupID = request.queryParam("renameGroupID"), let group = (project.groups.first { $0.id == renameGroupID }) {
-                let form = Form(url: "/renameGroup", method: "POST")
-                    .addInputText(name: "name", label: "Nazwa Grupy", value: group.name, labelCSSClass: "text-gray font-13")
-                    .addHidden(name: "projectID", value: project.id)
-                    .addHidden(name: "renameGroupID", value: group.id)
-                    .addSubmit(name: "submit", label: "Zmień")
-                    .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
-                page.assign(variables: ["form":form.output()], inNest: "addGroup")
+            if let action = request.queryParam("action") {
+                switch action {
+                case "addGroup":
+                    let form = Form(url: "/addGroup", method: "POST")
+                        .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
+                        .addHidden(name: "projectID", value: project.id)
+                        .addHidden(name: "groupID", value: activeGroup?.id ?? "")
+                        .addSubmit(name: "submit", label: "Dodaj")
+                        .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
+                    page.assign(variables: ["form":form.output()], inNest: "addGroup")
+                case "renameGroup":
+                    guard let group = activeGroup else { return .notFound }
+                    let form = Form(url: "/renameGroup", method: "POST")
+                        .addInputText(name: "name", label: "Nazwa Grupy", value: group.name, labelCSSClass: "text-gray font-13")
+                        .addHidden(name: "projectID", value: project.id)
+                        .addHidden(name: "groupID", value: group.id)
+                        .addSubmit(name: "submit", label: "Zmień")
+                        .addRaw(html: "<a href='\(url)' class='btn btn-purple-negative'>Anuluj</a>")
+                    page.assign(variables: ["form":form.output()], inNest: "addGroup")
+                default:
+                    break
+                }
             }
             
             
@@ -205,8 +209,8 @@ class WebApplication {
                 data["projectID"] = project.id
                 data["name"] = group.name
                 data["groupID"] = group.id
-                data["deleteURL"] = "\(url)&deleteGroupID=\(group.id)"
-                data["renameURL"] = "\(url)&renameGroupID=\(group.id)"
+                data["deleteURL"] = "\(url)&groupID=\(group.id)&action=deleteGroup"
+                data["renameURL"] = "\(url)&groupID=\(group.id)&action=renameGroup"
                 data["css"] = group.id == activeGroup?.id ? "treeItemActive" : "treeItemInactive"
                 page.assign(variables: data, inNest: "groupItem")
             }
@@ -227,7 +231,7 @@ class WebApplication {
                 return .notFound
             }
             var activeGroup: ProjectGroup?
-            if let groupID = formData["parentGroupID"] {
+            if let groupID = formData["groupID"] {
                 activeGroup = project.findGroup(id: groupID)
             }
             
@@ -242,21 +246,21 @@ class WebApplication {
                 project.groups.append(group)
             }
             
-            return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
+            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(activeGroup?.id ?? group.id)")
         }
         
         server.POST["/renameGroup"] = { request, responseHeaders in
             let formData = request.flatFormData()
-            guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first),
-                  let renameGroupID = formData["renameGroupID"],
-                  let group = project.findGroup(id: renameGroupID) else {
+            guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first) else {
                 return .notFound
             }
+            guard let groupID = formData["groupID"], let group = project.findGroup(id: groupID) else { return .notFound }
+            
             group.name = "bez nazwy"
             if let name = formData["name"], !name.isEmpty {
                 group.name = name
             }
-            return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
+            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(group.id)")
         }
         
         // MARK: delete question action
@@ -787,7 +791,7 @@ class WebApplication {
         var cardGroup: [String:String] = [:]
         cardGroup["title"] = "Dodaj grupę/podgrupę"
         cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
-        cardGroup["url"] = "\(editProjectUrl)&addGroup=\(activeGroup?.id ?? "")"
+        cardGroup["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addGroup"
         
         var cardParameter: [String:String] = [:]
         cardParameter["title"] = "Dodaj parametr"

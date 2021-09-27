@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-2 pt-2">
+    <div class="col-3 pt-2">
         <div class="pl-3 font-14 {css}">
             <i data-feather="chevron-right" style="height:14px"></i>  <i data-feather="layers" class="mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}">{projectName}</a>
         </div>
@@ -11,7 +11,7 @@
         </div>
         [END treeGroup]
     </div>
-    <div class="col-10">
+    <div class="col-9">
         {cards}
             
         <table class="table table-sm table-striped">
