@@ -65,13 +65,19 @@
   <script src="{src}"></script>
   [END js]
   <script>
-    feather.replace();
-  </script>
-  <script>
   <!-- Begin
   [START jscode]
   {code}
   [END jscode]
+ 
+  $( document ).ready(function() {
+      feather.replace();
+      [START jsOnReadyCode]
+      {code}
+      [END jsOnReadyCode]
+    });
+  
+
   //  End -->
   </script>
 </body>

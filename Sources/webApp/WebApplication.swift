@@ -225,6 +225,7 @@ class WebApplication {
                                 .addHidden(name: "step", value: "2")
                                 .addInputText(name: "minValue", label: "Wartość minimalna")
                                 .addInputText(name: "maxValue", label: "Wartość maksymalna")
+                                .addSeparator(txt: "Pozostawienie wolnych zakresów wartości minimalnej i maksymalnej pozwala na podanie nieograniczonych wartości w odpowiedzi.")
                                 .addSubmit(name: "submit", label: "Dodaj")
 
                             page.assign(variables: ["form":form.output()], inNest: "addParameter")
@@ -296,6 +297,8 @@ class WebApplication {
                 page.assign("table", table.output())
             } else {
                 let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.tpl"))
+                let js = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.js.tpl"))
+                template.assign(variables: ["code":js.output()], inNest: "jsOnReadyCode")
                 for group in activeGroup?.groups ?? project.groups {
                     var data: [String:String] = [:]
                     data["projectID"] = project.id
@@ -303,6 +306,8 @@ class WebApplication {
                     data["groupID"] = group.id
                     data["deleteURL"] = "\(url)&groupID=\(group.id)&action=deleteGroup"
                     data["renameURL"] = "\(url)&groupID=\(group.id)&action=renameGroup"
+                    data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
+                    data["checked"] = group.canBeCopied ? "checked" : ""
                     table.assign(variables: data, inNest: "group")
                 }
                 page.assign("table", table.output())
@@ -317,6 +322,15 @@ class WebApplication {
             container.assign("page", page.output())
             template.assign("page", container.output())
             return template.asResponse()
+        }
+        
+        server.GET["/toggleGroupCanBeCopied"] = { request, responseHeaders in
+            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
+                return .notFound
+            }
+            guard let groupID = request.queryParam("groupID"), let group = project.findGroup(id: groupID) else { return .notFound }
+            group.canBeCopied = Bool(request.queryParam("value") ?? "false") ?? false
+            return .noContent
         }
         
         server.POST["/addGroup"] = { request, responseHeaders in
@@ -723,6 +737,7 @@ class WebApplication {
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
         cardDictionary["url"] = "#"
+        cardDictionary["disabled"] = "disabled"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())

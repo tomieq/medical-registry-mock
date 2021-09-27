@@ -50,6 +50,7 @@ class ProjectGroup {
     var name: String = ""
     var groups: [ProjectGroup] = []
     var questions: [ProjectQuestion] = []
+    var canBeCopied = false
     
     func findGroup(id: String) -> ProjectGroup? {
         self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
