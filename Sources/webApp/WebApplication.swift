@@ -150,6 +150,11 @@ class WebApplication {
                 return .notFound
             }
             
+            var activeGroup: ProjectGroup?
+            if let groupID = request.queryParam("groupID") {
+                activeGroup = project.findGroup(id: groupID)
+            }
+            
             if let deleteGroupID = request.queryParam("deleteGroupID") {
                 project.groups = project.groups.filter { $0.id != deleteGroupID }
             }
@@ -168,28 +173,7 @@ class WebApplication {
             
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
 
-            let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
-            
-            var cardGroup: [String:String] = [:]
-            cardGroup["title"] = "Dodaj grupę/podgrupę"
-            cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
-            cardGroup["url"] = "\(url)&addGroup=root"
-            
-            var cardParameter: [String:String] = [:]
-            cardParameter["title"] = "Dodaj parametr"
-            cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
-            cardParameter["url"] = "#"
-            
-            var cardDictionary: [String:String] = [:]
-            cardDictionary["title"] = "Edytuj słowniki"
-            cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-            cardDictionary["url"] = "#"
-            
-            cardView.assign(variables: cardGroup, inNest: "card")
-            cardView.assign(variables: cardParameter, inNest: "card")
-            cardView.assign(variables: cardDictionary, inNest: "card")
-            
-            page.assign("cards", cardView.output())
+            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, editProjectUrl: url)
             
             if let parentGroupID = request.queryParam("addGroup") {
                 let form = Form(url: "/addGroup", method: "POST")
@@ -211,16 +195,19 @@ class WebApplication {
                 page.assign(variables: ["form":form.output()], inNest: "addGroup")
             }
             
-            let activeGroup = request.queryParam("groupID")
+            
             for group in project.groups {
+                self.addGroupToTreeMenu(page, group: group, activeGroup: activeGroup, editProjectUrl: url)
+            }
+            
+            for group in activeGroup?.groups ?? project.groups {
                 var data: [String:String] = [:]
                 data["projectID"] = project.id
                 data["name"] = group.name
                 data["groupID"] = group.id
                 data["deleteURL"] = "\(url)&deleteGroupID=\(group.id)"
                 data["renameURL"] = "\(url)&renameGroupID=\(group.id)"
-                data["css"] = group.id == activeGroup ? "treeItemActive" : "treeItemInactive"
-                page.assign(variables: data, inNest: "group")
+                data["css"] = group.id == activeGroup?.id ? "treeItemActive" : "treeItemInactive"
                 page.assign(variables: data, inNest: "groupItem")
             }
             var templateVariables: [String:String] = [:]
@@ -239,12 +226,21 @@ class WebApplication {
             guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first) else {
                 return .notFound
             }
+            var activeGroup: ProjectGroup?
+            if let groupID = formData["parentGroupID"] {
+                activeGroup = project.findGroup(id: groupID)
+            }
+            
             let group = ProjectGroup()
             group.name = "bez nazwy"
             if let name = formData["name"], !name.isEmpty {
                 group.name = name
             }
-            project.groups.append(group)
+            if let parentGroup = activeGroup {
+                parentGroup.groups.append(group)
+            } else {
+                project.groups.append(group)
+            }
             
             return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
         }
@@ -253,7 +249,7 @@ class WebApplication {
             let formData = request.flatFormData()
             guard let project = (self.projects.filter{ $0.id == formData["projectID"] }.first),
                   let renameGroupID = formData["renameGroupID"],
-                  let group = (project.groups.first { $0.id == renameGroupID }) else {
+                  let group = project.findGroup(id: renameGroupID) else {
                 return .notFound
             }
             group.name = "bez nazwy"
@@ -783,5 +779,39 @@ class WebApplication {
         userBadge.assign("avatarUrl", avatarUrl)
         template.assign("userBadge", userBadge.output())
         return template
+    }
+    
+    private func addCardsToProjectEditTemplate(_ page: Template, activeGroup: ProjectGroup?, editProjectUrl: String) {
+        let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
+        
+        var cardGroup: [String:String] = [:]
+        cardGroup["title"] = "Dodaj grupę/podgrupę"
+        cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
+        cardGroup["url"] = "\(editProjectUrl)&addGroup=\(activeGroup?.id ?? "")"
+        
+        var cardParameter: [String:String] = [:]
+        cardParameter["title"] = "Dodaj parametr"
+        cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
+        cardParameter["url"] = "#"
+        
+        var cardDictionary: [String:String] = [:]
+        cardDictionary["title"] = "Edytuj słowniki"
+        cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
+        cardDictionary["url"] = "#"
+        
+        cardView.assign(variables: cardGroup, inNest: "card")
+        cardView.assign(variables: cardParameter, inNest: "card")
+        cardView.assign(variables: cardDictionary, inNest: "card")
+        
+        page.assign("cards", cardView.output())
+    }
+    
+    private func addGroupToTreeMenu(_ template: Template, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 0, editProjectUrl: String) {
+        
+        let url = "\(editProjectUrl)&groupID=\(group.id)"
+        let uiTreeItem = UITreeItem(name: group.name, nestLevel: level, isActive: group.id == activeGroup?.id, url: url, hasChildren: !group.groups.isEmpty)
+        template.assign(variables: uiTreeItem.getTemplateVariables(), inNest: "treeGroup")
+        let level = level + 1
+        group.groups.forEach{ self.addGroupToTreeMenu(template, group: $0, activeGroup: activeGroup, level: level, editProjectUrl: editProjectUrl) }
     }
 }

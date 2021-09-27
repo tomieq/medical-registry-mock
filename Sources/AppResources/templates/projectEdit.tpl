@@ -1,13 +1,15 @@
 <div class="row">
     <div class="col-2 pt-2">
         <div class="pl-3 font-14 {css}">
-                 <span class="font-22">›</span>  <i data-feather="layers" class="mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}">{projectName}</a>
+            <i data-feather="chevron-right" style="height:14px"></i>  <i data-feather="layers" class="mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}">{projectName}</a>
         </div>
-        [START group]
-        <div class="pl-3 font-14 {css}">
-                 <span class="font-22">›</span>  <i data-feather="file-text" class="mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}&groupID={groupID}">{name}</a>
+        [START treeGroup]
+        <div class="pl-3 m-2 font-14 {css}">
+                 <div style="margin-left:{margin}px;">
+                    <i data-feather="chevron-{side}" style="height:14px"></i>  <i data-feather="file-text" class="mx-2" style="height: 16px;"></i> <a href="{url}">{name}</a>
+                 </div>
         </div>
-        [END group]
+        [END treeGroup]
     </div>
     <div class="col-10">
         {cards}

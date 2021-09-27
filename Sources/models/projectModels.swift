@@ -36,12 +36,20 @@ class Project {
     var status: ProjectStatus = .created
     var dictionaries: [ProjectDictionary] = []
     var data: [DataEntry] = []
+    
+    func findGroup(id: String) -> ProjectGroup? {
+        return self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
+    }
 }
 
 class ProjectGroup {
     let id: String = UUID().uuidString
     var name: String = ""
     var groups: [ProjectGroup] = []
+    
+    func findGroup(id: String) -> ProjectGroup? {
+        return self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
+    }
 }
 
 enum ProjectQuestionType: String, CaseIterable {
