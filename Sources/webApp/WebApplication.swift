@@ -240,7 +240,10 @@ class WebApplication {
                 return .notFound
             }
             let group = ProjectGroup()
-            group.name = formData["name"] ?? "bez nazwy"
+            group.name = "bez nazwy"
+            if let name = formData["name"], !name.isEmpty {
+                group.name = name
+            }
             project.groups.append(group)
             
             return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
@@ -253,8 +256,10 @@ class WebApplication {
                   let group = (project.groups.first { $0.id == renameGroupID }) else {
                 return .notFound
             }
-            group.name = formData["name"] ?? "bez nazwy"
-            
+            group.name = "bez nazwy"
+            if let name = formData["name"], !name.isEmpty {
+                group.name = name
+            }
             return .movedTemporarily("/editProject?projectID=\(formData["projectID"] ?? "nil")")
         }
         
