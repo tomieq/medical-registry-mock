@@ -810,7 +810,7 @@ class WebApplication {
         page.assign("cards", cardView.output())
     }
     
-    private func addGroupToTreeMenu(_ template: Template, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 0, editProjectUrl: String) {
+    private func addGroupToTreeMenu(_ template: Template, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 1, editProjectUrl: String) {
         
         let url = "\(editProjectUrl)&groupID=\(group.id)"
         let uiTreeItem = UITreeItem(name: group.name, nestLevel: level, isActive: group.id == activeGroup?.id, url: url, hasChildren: !group.groups.isEmpty)
