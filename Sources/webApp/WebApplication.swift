@@ -697,21 +697,29 @@ class WebApplication {
     private func addCardsToProjectEditTemplate(_ page: Template, activeGroup: ProjectGroup?, editProjectUrl: String) {
         let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
         
-        if activeGroup?.questions.isEmpty ?? true {
-            var cardGroup: [String:String] = [:]
-            cardGroup["title"] = "Dodaj grupę/podgrupę"
-            cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
-            cardGroup["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addGroup"
-            cardView.assign(variables: cardGroup, inNest: "card")
-        }
+        var cardGroup: [String:String] = [:]
+        cardGroup["title"] = "Dodaj grupę/podgrupę"
+        cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
         
-        if let group = activeGroup, group.groups.isEmpty {
-            var cardParameter: [String:String] = [:]
-            cardParameter["title"] = "Dodaj parametr"
-            cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
-            cardParameter["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addParameter"
-            cardView.assign(variables: cardParameter, inNest: "card")
+        if activeGroup?.questions.isEmpty ?? true {
+            cardGroup["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addGroup"
+        } else {
+            cardGroup["url"] = "#"
+            cardGroup["disabled"] = "disabled"
         }
+        cardView.assign(variables: cardGroup, inNest: "card")
+        
+        
+        var cardParameter: [String:String] = [:]
+        cardParameter["title"] = "Dodaj parametr"
+        cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
+        if let group = activeGroup, group.groups.isEmpty {
+            cardParameter["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addParameter"
+        } else {
+            cardParameter["url"] = "#"
+            cardParameter["disabled"] = "disabled"
+        }
+        cardView.assign(variables: cardParameter, inNest: "card")
         
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
