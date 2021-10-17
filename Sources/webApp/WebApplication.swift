@@ -144,7 +144,7 @@ class WebApplication {
         }
         
         // MARK: edit project
-        server["editProject"] = { request, responseHeaders in
+        server["/editProject"] = { request, responseHeaders in
             
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
@@ -262,8 +262,15 @@ class WebApplication {
                     default:
                         break
                     }
-                    
-                    
+                case "dictionaryList":
+                    let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
+                    for dictionary in project.dictionaries {
+                        var data: [String:String] = [:]
+                        data["name"] = dictionary.name
+                        data["projectID"] = project.id
+                        list.assign(variables: data, inNest: "dictionary")
+                    }
+                    page.assign("table", list.output())
                 default:
                     break
                 }
@@ -736,8 +743,7 @@ class WebApplication {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-        cardDictionary["url"] = "#"
-        cardDictionary["disabled"] = "disabled"
+        cardDictionary["url"] = "\(editProjectUrl)&action=dictionaryList"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())
