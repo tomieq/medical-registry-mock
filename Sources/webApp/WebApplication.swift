@@ -196,12 +196,16 @@ class WebApplication {
                         .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
                     page.assign(variables: ["form":form.output()], inNest: "addGroup")
                 case "addParameter":
-                    if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, cancelUrl: cancelUrl, page: page) {
+                    if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, page: page) {
                         return response
                     }
 
                 case "dictionaryList":
+                    if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
+                        return response
+                    }
                     let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
+                    list.assign("projectID", project.id)
                     for dictionary in project.dictionaries {
                         var data: [String:String] = [:]
                         data["name"] = dictionary.name
@@ -416,8 +420,6 @@ class WebApplication {
         
         sampleProject.dictionaries.append(dict)
         
-        
-        
         let dict2 = ProjectDictionary()
         dict2.name = "Województwo"
         
@@ -490,10 +492,11 @@ class WebApplication {
         group.groups.forEach{ self.addGroupToTreeMenu(template, group: $0, activeGroup: activeGroup, level: level, editProjectUrl: editProjectUrl) }
     }
     
-    private func addParameter(request: HttpRequest, activeGroup: ProjectGroup?, url: String, project: Project, cancelUrl: String, page: Template) -> HttpResponse? {
+    private func addParameter(request: HttpRequest, activeGroup: ProjectGroup?, url: String, project: Project, page: Template) -> HttpResponse? {
         guard let group = activeGroup else { return .notFound }
         let formData = request.flatFormData()
         let editUrl = "\(url)&groupID=\(group.id)&action=addParameter"
+        let cancelUrl = "\(url)&groupID=\(group.id)"
         switch formData["step"] ?? "0" {
         case "0":
             let questionTypeOptions = ProjectQuestionType.allCases.map{FormRadioModel(label: $0.title, value: $0.rawValue)}
@@ -505,7 +508,7 @@ class WebApplication {
                 .addRadio(name: "type", label: "Typ parametru", options: questionTypeOptions, labelCSSClass: "text-gray font-20")
                 .addSubmit(name: "submit", label: "Dodaj")
                 .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
-            page.assign(variables: ["form":form.output()], inNest: "addParameter")
+            page.assign(variables: ["form":form.output(), "title":"Dodaj Parametr"], inNest: "wideForm")
         case "1":
             guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
                 return .movedPermanently(cancelUrl)
@@ -524,8 +527,9 @@ class WebApplication {
                     .addInputText(name: "unit", label: "Jednostka")
                     .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
                     .addSubmit(name: "submit", label: "Dodaj")
+                    .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
 
-                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+                page.assign(variables: ["form":form.output(), "title":"Dodaj Parametr"], inNest: "wideForm")
             case .dictionary:
                 let form = Form(url: editUrl, method: "POST")
                     .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
@@ -534,7 +538,8 @@ class WebApplication {
                     .addHidden(name: "step", value: "2")
                     .addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) })
                     .addSubmit(name: "submit", label: "Dodaj")
-                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+                    .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
+                page.assign(variables: ["form":form.output(), "title":"Dodaj Parametr"], inNest: "wideForm")
             case .longText:
                 fallthrough
             case .text:
@@ -546,7 +551,8 @@ class WebApplication {
                     .addInputText(name: "unit", label: "Jednostka")
                     .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
                     .addSubmit(name: "submit", label: "Dodaj")
-                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+                    .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
+                page.assign(variables: ["form":form.output(), "title":"Dodaj Parametr"], inNest: "wideForm")
             case .unknown:
                 break
             }
@@ -566,6 +572,66 @@ class WebApplication {
         default:
             break
         }
+        return nil
+    }
+    
+    private func addDictionary(request: HttpRequest, page: Template, url: String, project: Project) -> HttpResponse? {
+        guard request.queryParam("form") != nil else { return nil }
+        
+        enum Step {
+            case showForm
+            case moreInputs
+            case createDictionary
+        }
+        
+        let formData = request.flatFormData()
+        
+        let editUrl = "\(url)&action=dictionaryList&form=new"
+        let cancelUrl = "\(url)&action=dictionaryList"
+        
+        var answerAmount = Int(formData["inputs"] ?? "2") ?? 2
+        var step: Step = .showForm
+
+        if formData["addInput"] != nil {
+            step = .moreInputs
+            answerAmount += 1
+        }
+        if formData["submit"] != nil {
+            step = .createDictionary
+        }
+        
+        switch step {
+        case .createDictionary:
+            let dictionary = ProjectDictionary()
+            dictionary.name = formData["name"] ?? "Bez nazwy"
+            for n in (1...answerAmount) {
+                if let name = formData["option\(n)"] {
+                    let option = ProjectDictionaryOption()
+                    option.title = name
+                    dictionary.options.append(option)
+                }
+            }
+            project.dictionaries.append(dictionary)
+            break
+        default:
+            
+            let form = Form(url: editUrl, method: "POST")
+                .addInputText(name: "name", label: "Nazwa słownika", value: formData["name"] ?? "", labelCSSClass: "text-gray font-20")
+                .addHidden(name: "projectID", value: project.id)
+                .addHidden(name: "inputs", value: "\(answerAmount)")
+                .addSeparator(txt: "Podaj wartości, jakie użytkownik będzie miał do wyboru")
+            
+            for n in (1...answerAmount) {
+                form.addInputText(name: "option\(n)", label: "", value: formData["option\(n)"] ?? "")
+            }
+            
+            form.addSubmit(name: "addInput", label: "+ Dodaj kolejną wartość wyboru")
+                .addRaw(html: "<hr>")
+                .addSubmit(name: "submit", label: "Dodaj")
+                .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
+            page.assign(variables: ["form":form.output(), "title":"Dodaj słownik"], inNest: "wideForm")
+        }
+        
         return nil
     }
 }

@@ -26,13 +26,13 @@
     {form}
 </div>
 [END addGroup]
-[START addParameter]
+[START wideForm]
 <div style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; background: rgba(128, 128, 128, .5)">
     <div class="float-right p-4" style="width: 800px; height: 100%; background-color: white; ">
-    <p>Dodaj Parametr</p>
+    <p>{title}</p>
     {form}
 </div>
-[END addGroup]
+[END wideForm]
 
 
 <style>

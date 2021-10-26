@@ -21,7 +21,7 @@
     <input type="hidden" name="{name}" value="{value}">
 [END hidden]
 [START submit]
-  <button type="submit" name="{name}" class="btn btn-purple">{label}</button>
+  <button type="submit" name="{name}" value="{name}" class="btn btn-purple">{label}</button>
 [END submit]
 [START text]
   <div class="form-group">

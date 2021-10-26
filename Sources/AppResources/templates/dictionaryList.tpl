@@ -1,5 +1,5 @@
 <div class="mt-2 mb-2">
-    <a href="/addProject" class="btn btn-purple float-right">+ Dodaj słownik</a>
+    <a href="/editProject?projectID={projectID}&action=dictionaryList&form=new" class="btn btn-purple float-right">+ Dodaj słownik</a>
 </div>
 <div style="clear: both;"></div>
 <div class="row mt-2">
