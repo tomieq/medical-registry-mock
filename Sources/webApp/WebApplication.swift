@@ -204,12 +204,14 @@ class WebApplication {
                     if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
                         return response
                     }
+                    self.dictionaryPreview(request: request, page: page, project: project)
                     let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
                     list.assign("projectID", project.id)
                     for dictionary in project.dictionaries {
                         var data: [String:String] = [:]
                         data["name"] = dictionary.name
                         data["projectID"] = project.id
+                        data["dictionaryID"] = dictionary.id
                         list.assign(variables: data, inNest: "dictionary")
                     }
                     page.assign("table", list.output())
@@ -321,53 +323,6 @@ class WebApplication {
                 group.name = name
             }
             return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(group.id)")
-        }
-        
-        // MARK: add dictionary form
-        server.GET["/addDictionary"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
-
-            let form = Form(url: "/addDictionary", method: "POST")
-                .addHidden(name: "projectID", value: project.id)
-                .addInputText(name: "name", label: "Nazwa słownika")
-                .addSeparator(txt: "Podaj warości, które użytkownik będzie miał do wyboru. Wpisz tyle pól ile trzeba, pozostałe zostaw puste.")
-            
-            (1...10).forEach { n in
-                form.addInputText(name: "option\(n)", label: "Wartość wyboru \(n)")
-            }
-            form.addSubmit(name: "submit", label: "Dodaj")
-
-            navi.assign("title", "Utwórz nowy słownik")
-            navi.assign("page", form.output())
-            
-            template.assign("page", navi.output())
-            return template.asResponse()
-        }
-        
-        // MARK: add dictionary action
-        server.POST["/addDictionary"] = { request, responseHeaders in
-
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            let formData = request.flatFormData()
-            let dictionary = ProjectDictionary()
-            dictionary.name = formData["name"] ?? "brak nazwy"
-            (1...10).forEach { n in
-                if let title = formData["option\(n)"]?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
-                    let option = ProjectDictionaryOption()
-                    option.title = title
-                    dictionary.options.append(option)
-                }
-            }
-            project.dictionaries.append(dictionary)
-            return .movedPermanently("editProject?projectID=\(project.id)")
         }
         
         server.notFoundHandler = { request, responseHeaders in
@@ -633,5 +588,17 @@ class WebApplication {
         }
         
         return nil
+    }
+    
+    private func dictionaryPreview(request: HttpRequest, page: Template, project: Project) {
+        guard let dictionaryID = request.queryParam("preview") else { return }
+        guard let dictionary = (project.dictionaries.first{ $0.id == dictionaryID }) else { return }
+        var html = Template.htmlNode(type: "h4", content: dictionary.name)
+        for option in dictionary.options {
+            html.append(Template.htmlNode(type: "p", content: option.title))
+        }
+        let cancelUrl = "/editProject?projectID=\(project.id)&action=dictionaryList"
+        html.append(Template.htmlNode(type: "a", attributes: ["href":cancelUrl, "class":"btn btn-purple"], content: "Zamknij"))
+        page.assign(variables: ["form":html], inNest: "wideForm")
     }
 }
