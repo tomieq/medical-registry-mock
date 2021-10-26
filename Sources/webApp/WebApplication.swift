@@ -196,81 +196,10 @@ class WebApplication {
                         .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
                     page.assign(variables: ["form":form.output()], inNest: "addGroup")
                 case "addParameter":
-                    guard let group = activeGroup else { return .notFound }
-                    let formData = request.flatFormData()
-                    let editUrl = "\(url)&groupID=\(group.id)&action=addParameter"
-                    switch formData["step"] ?? "0" {
-                    case "0":
-                        let questionTypeOptions = ProjectQuestionType.allCases.map{FormRadioModel(label: $0.title, value: $0.rawValue)}
-                        let form = Form(url: editUrl, method: "POST")
-                            .addInputText(name: "label", label: "Nazwa parametru", labelCSSClass: "text-gray font-20")
-                            .addHidden(name: "projectID", value: project.id)
-                            .addHidden(name: "groupID", value: group.id)
-                            .addHidden(name: "step", value: "1")
-                            .addRadio(name: "type", label: "Typ parametru", options: questionTypeOptions, labelCSSClass: "text-gray font-20")
-                            .addSubmit(name: "submit", label: "Dodaj")
-                            .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
-                        page.assign(variables: ["form":form.output()], inNest: "addParameter")
-                    case "1":
-                        guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
-                            return .movedPermanently(cancelUrl)
-                        }
-                        switch questionType {
-
-                        case .number:
-                            let form = Form(url: editUrl, method: "POST")
-                                .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
-                                .addHidden(name: "type", value: formData["type"] ?? "")
-                                .addHidden(name: "projectID", value: project.id)
-                                .addHidden(name: "step", value: "2")
-                                .addInputText(name: "minValue", label: "Wartość minimalna")
-                                .addInputText(name: "maxValue", label: "Wartość maksymalna")
-                                .addSeparator(txt: "Pozostawienie wolnych zakresów wartości minimalnej i maksymalnej pozwala na podanie nieograniczonych wartości w odpowiedzi.")
-                                .addInputText(name: "unit", label: "Jednostka")
-                                .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
-                                .addSubmit(name: "submit", label: "Dodaj")
-
-                            page.assign(variables: ["form":form.output()], inNest: "addParameter")
-                        case .dictionary:
-                            let form = Form(url: editUrl, method: "POST")
-                                .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
-                                .addHidden(name: "type", value: formData["type"] ?? "")
-                                .addHidden(name: "projectID", value: project.id)
-                                .addHidden(name: "step", value: "2")
-                                .addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) })
-                                .addSubmit(name: "submit", label: "Dodaj")
-                            page.assign(variables: ["form":form.output()], inNest: "addParameter")
-                        case .longText:
-                            fallthrough
-                        case .text:
-                            let form = Form(url: editUrl, method: "POST")
-                                .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
-                                .addHidden(name: "type", value: formData["type"] ?? "")
-                                .addHidden(name: "projectID", value: project.id)
-                                .addHidden(name: "step", value: "2")
-                                .addInputText(name: "unit", label: "Jednostka")
-                                .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
-                                .addSubmit(name: "submit", label: "Dodaj")
-                            page.assign(variables: ["form":form.output()], inNest: "addParameter")
-                        case .unknown:
-                            break
-                        }
-                    case "2":
-                        guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
-                            return .movedPermanently(cancelUrl)
-                        }
-                        let question = ProjectQuestion()
-                        question.label = formData["label"] ?? "Brak nazwy"
-                        question.dataType = questionType
-                        question.maxValue = formData["maxValue"]?.toInt()
-                        question.minValue = formData["minValue"]?.toInt()
-                        question.dictionaryID = formData["dictionaryID"]
-                        question.unit = formData["unit"]
-                        group.questions.append(question)
-                        return .movedPermanently(cancelUrl)
-                    default:
-                        break
+                    if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, cancelUrl: cancelUrl, page: page) {
+                        return response
                     }
+
                 case "dictionaryList":
                     let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
                     for dictionary in project.dictionaries {
@@ -389,102 +318,6 @@ class WebApplication {
             }
             return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(group.id)")
         }
-        /*
-        // MARK: delete question action
-        server.GET["/deleteQuestion"] = { request, responseHeaders in
-            
-            if let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) {
-                project.questions = project.questions.filter{ $0.id != request.queryParam("questionID") }
-            }
-            return .movedPermanently("/editProject?projectID=\(request.queryParam("projectID") ?? "")")
-        }
- */
-        /*
-        // MARK: edit question form
-        server.GET["/editQuestion"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first),
-               let question = (project.questions.filter{ $0.id == request.queryParam("questionID") }.first) else {
-                return .notFound
-            }
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
-
-            let form = Form(url: "/editQuestion", method: "POST")
-                .addInputText(name: "label", label: "Pytanie", value: question.label ?? "")
-                .addSeparator(txt: "Typ: \(question.dataType.title)")
-                .addHidden(name: "projectID", value: project.id)
-                .addHidden(name: "questionID", value: question.id)
-            
-            switch question.dataType {
-            case .number:
-                form.addInputText(name: "minValue", label: "Wartość minimalna", value: question.minValue.toString())
-                    .addInputText(name: "maxValue", label: "Wartość maksymalna", value: question.maxValue.toString())
-            case .dictionary:
-                
-                form.addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) }, checked: question.dictionaryID)
-            default:
-                break
-            }
-            form.addSubmit(name: "submit", label: "Zapisz")
-
-            navi.assign("title", "Edycja pytania")
-            navi.assign("page", form.output())
-
-            template.assign("page", navi.output())
-            return template.asResponse()
-        }
-        
-        // MARK: edit question action
-        server.POST["/editQuestion"] = { request, responseHeaders in
-
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first),
-               let question = (project.questions.filter{ $0.id == request.queryParam("questionID") }.first) else {
-                return .notFound
-            }
-            let formData = request.flatFormData()
-            question.label = formData["label"]
-            question.maxValue = formData["maxValue"]?.toInt()
-            question.minValue = formData["minValue"]?.toInt()
-            question.dictionaryID = formData["dictionaryID"]
-            
-            return .movedPermanently("editProject?projectID=\(project.id)")
-        }
-        */
-        // MARK: assign users form
-        server.GET["/assignUsers"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/projectConfigNavi.tpl"))
-
-            let form = Form(url: "/assignUsers", method: "POST")
-                .addHidden(name: "projectID", value: project.id)
-            
-            (1...10).forEach { n in
-                form.addCheckbox(name: "user\(n)", value: "1", label: "dr Jan Kowalski \(n)")
-            }
-            form.addSubmit(name: "submit", label: "Przypisz")
-
-            navi.assign("title", "Przypisz pracowników do projektu")
-            navi.assign("page", form.output())
-
-            template.assign("page", navi.output())
-            return template.asResponse()
-        }
-        
-        // MARK: assign users action
-        server.POST["/assignUsers"] = { request, responseHeaders in
-
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            // this is just a stub, no implementation for demo
-            return .movedPermanently("editProject?projectID=\(project.id)")
-        }
         
         // MARK: add dictionary form
         server.GET["/addDictionary"] = { request, responseHeaders in
@@ -531,119 +364,6 @@ class WebApplication {
             }
             project.dictionaries.append(dictionary)
             return .movedPermanently("editProject?projectID=\(project.id)")
-        }
-        /*
-        // MARK: delete dictionary action
-        server.GET["/deleteDictionary"] = { request, responseHeaders in
-
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first),
-                  let dictionary = (project.dictionaries.filter{ $0.id == request.queryParam("dictionaryID") }.first) else {
-                return .notFound
-            }
-            for question in project.questions {
-                if question.dictionaryID == dictionary.id {
-                    return .movedPermanently("editProject?projectID=\(project.id)")
-                }
-            }
-            project.dictionaries.remove(object: dictionary)
-            return .movedPermanently("editProject?projectID=\(project.id)")
-        }
-        */
-        // MARK: active projects list
-        server.GET["/myProjects"] = { request, responseHeaders in
-
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/myProjectsNavi.tpl"))
-            let list = Template(raw: Resource.getAppResource(relativePath: "templates/myProjectsList.tpl"))
-
-            self.projects.forEach { project in
-                var data = [String:String]()
-                data["name"] = project.name
-                data["projectID"] = project.id
-                list.assign(variables: data, inNest: "project")
-            }
-
-            navi.assign("title", "Moje projekty")
-            navi.assign("page", list.output())
-            
-            template.assign("page", navi.output())
-            return template.asResponse()
-        }
-        /*
-        // MARK: add data to project form
-        server.GET["/addDataToProject"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            
-            let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
-            let navi = Template(raw: Resource.getAppResource(relativePath: "templates/myProjectsNavi.tpl"))
-
-            let form = Form(url: "/addDataToProject", method: "POST")
-                .addHidden(name: "projectID", value: project.id)
-                
-            project.questions.forEach { question in
-                switch question.dataType {
-                
-                case .unknown:
-                    return
-                case .text:
-                    form.addInputText(name: question.id, label: question.label ?? "-")
-                case .longText:
-                    form.addTextarea(name: question.id, label: question.label ?? "-")
-                case .number:
-                    form.addInputText(name: question.id, label: question.label ?? "-")
-                case .dictionary:
-                    guard let dictionary = (project.dictionaries.filter{ $0.id == question.dictionaryID }.first) else { return }
-                    form.addRadio(name: question.id, label: question.label ?? "-", options: dictionary.options.map{ FormRadioModel(label: $0.title, value: $0.id) })
-                }
-            }
-            form.addSubmit(name: "submit", label: "Dodaj")
-
-            navi.assign("title", "Dodaj nowe dane w \(project.name)")
-            navi.assign("page", form.output())
-
-            template.assign("page", navi.output())
-            return template.asResponse()
-        }
-        */
-        /*
-        // MARK: add data to project action
-        server.POST["/addDataToProject"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
-                return .notFound
-            }
-            let formData = request.flatFormData()
-            
-            let dataEntry = DataEntry(ownerID: "userID")
-                
-            project.questions.forEach { question in
-                
-                if let answer = formData[question.id] {
-                    let dataEntryAnswer = DataEntryAnswer()
-                    dataEntryAnswer.questionID = question.id
-                    dataEntryAnswer.value = answer
-                    dataEntry.answers.append(dataEntryAnswer)
-                }
-            }
-            project.entries.append(dataEntry)
-            
-            return .movedPermanently("browseProjectData?projectID=\(project.id)")
-        }
-        */
-        // MARK: delete data from project action
-        server.GET["/deleteDataFromProject"] = { request, responseHeaders in
-            
-            guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first),
-                  let data = (project.entries.filter{ $0.id == request.queryParam("dataID") }.first) else {
-                return .notFound
-            }
-            project.entries.remove(object: data)
-            
-            return .movedPermanently("browseProjectData?projectID=\(project.id)")
-            
         }
         
         server.notFoundHandler = { request, responseHeaders in
@@ -768,5 +488,84 @@ class WebApplication {
         template.assign(variables: uiTreeItem.getTemplateVariables(), inNest: "treeGroup")
         let level = level + 1
         group.groups.forEach{ self.addGroupToTreeMenu(template, group: $0, activeGroup: activeGroup, level: level, editProjectUrl: editProjectUrl) }
+    }
+    
+    private func addParameter(request: HttpRequest, activeGroup: ProjectGroup?, url: String, project: Project, cancelUrl: String, page: Template) -> HttpResponse? {
+        guard let group = activeGroup else { return .notFound }
+        let formData = request.flatFormData()
+        let editUrl = "\(url)&groupID=\(group.id)&action=addParameter"
+        switch formData["step"] ?? "0" {
+        case "0":
+            let questionTypeOptions = ProjectQuestionType.allCases.map{FormRadioModel(label: $0.title, value: $0.rawValue)}
+            let form = Form(url: editUrl, method: "POST")
+                .addInputText(name: "label", label: "Nazwa parametru", labelCSSClass: "text-gray font-20")
+                .addHidden(name: "projectID", value: project.id)
+                .addHidden(name: "groupID", value: group.id)
+                .addHidden(name: "step", value: "1")
+                .addRadio(name: "type", label: "Typ parametru", options: questionTypeOptions, labelCSSClass: "text-gray font-20")
+                .addSubmit(name: "submit", label: "Dodaj")
+                .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
+            page.assign(variables: ["form":form.output()], inNest: "addParameter")
+        case "1":
+            guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
+                return .movedPermanently(cancelUrl)
+            }
+            switch questionType {
+
+            case .number:
+                let form = Form(url: editUrl, method: "POST")
+                    .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
+                    .addHidden(name: "type", value: formData["type"] ?? "")
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "step", value: "2")
+                    .addInputText(name: "minValue", label: "Wartość minimalna")
+                    .addInputText(name: "maxValue", label: "Wartość maksymalna")
+                    .addSeparator(txt: "Pozostawienie wolnych zakresów wartości minimalnej i maksymalnej pozwala na podanie nieograniczonych wartości w odpowiedzi.")
+                    .addInputText(name: "unit", label: "Jednostka")
+                    .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
+                    .addSubmit(name: "submit", label: "Dodaj")
+
+                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+            case .dictionary:
+                let form = Form(url: editUrl, method: "POST")
+                    .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
+                    .addHidden(name: "type", value: formData["type"] ?? "")
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "step", value: "2")
+                    .addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) })
+                    .addSubmit(name: "submit", label: "Dodaj")
+                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+            case .longText:
+                fallthrough
+            case .text:
+                let form = Form(url: editUrl, method: "POST")
+                    .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
+                    .addHidden(name: "type", value: formData["type"] ?? "")
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "step", value: "2")
+                    .addInputText(name: "unit", label: "Jednostka")
+                    .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
+                    .addSubmit(name: "submit", label: "Dodaj")
+                page.assign(variables: ["form":form.output()], inNest: "addParameter")
+            case .unknown:
+                break
+            }
+        case "2":
+            guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
+                return .movedPermanently(cancelUrl)
+            }
+            let question = ProjectQuestion()
+            question.label = formData["label"] ?? "Brak nazwy"
+            question.dataType = questionType
+            question.maxValue = formData["maxValue"]?.toInt()
+            question.minValue = formData["minValue"]?.toInt()
+            question.dictionaryID = formData["dictionaryID"]
+            question.unit = formData["unit"]
+            group.questions.append(question)
+            return .movedPermanently(cancelUrl)
+        default:
+            break
+        }
+        return nil
     }
 }
