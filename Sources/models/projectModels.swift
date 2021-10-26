@@ -121,6 +121,7 @@ class ProjectQuestion {
     var minValue: Int?
     var maxValue: Int?
     var dictionaryID: String?
+    var unit: String?
 }
 
 class DataEntry: Equatable {

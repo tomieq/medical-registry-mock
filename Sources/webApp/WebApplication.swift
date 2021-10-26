@@ -226,6 +226,8 @@ class WebApplication {
                                 .addInputText(name: "minValue", label: "Wartość minimalna")
                                 .addInputText(name: "maxValue", label: "Wartość maksymalna")
                                 .addSeparator(txt: "Pozostawienie wolnych zakresów wartości minimalnej i maksymalnej pozwala na podanie nieograniczonych wartości w odpowiedzi.")
+                                .addInputText(name: "unit", label: "Jednostka")
+                                .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
                                 .addSubmit(name: "submit", label: "Dodaj")
 
                             page.assign(variables: ["form":form.output()], inNest: "addParameter")
@@ -238,13 +240,20 @@ class WebApplication {
                                 .addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) })
                                 .addSubmit(name: "submit", label: "Dodaj")
                             page.assign(variables: ["form":form.output()], inNest: "addParameter")
-                        default:
-                            let question = ProjectQuestion()
-                            question.label = formData["label"] ?? "Brak nazwy"
-                            question.dataType = questionType
-
-                            group.questions.append(question)
-                            return .movedPermanently(cancelUrl)
+                        case .longText:
+                            fallthrough
+                        case .text:
+                            let form = Form(url: editUrl, method: "POST")
+                                .addHidden(name: "label", value: formData["label"] ?? "Brak nazwy")
+                                .addHidden(name: "type", value: formData["type"] ?? "")
+                                .addHidden(name: "projectID", value: project.id)
+                                .addHidden(name: "step", value: "2")
+                                .addInputText(name: "unit", label: "Jednostka")
+                                .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
+                                .addSubmit(name: "submit", label: "Dodaj")
+                            page.assign(variables: ["form":form.output()], inNest: "addParameter")
+                        case .unknown:
+                            break
                         }
                     case "2":
                         guard let questionType = ProjectQuestionType(rawValue: formData["type"] ?? "") else {
@@ -256,7 +265,7 @@ class WebApplication {
                         question.maxValue = formData["maxValue"]?.toInt()
                         question.minValue = formData["minValue"]?.toInt()
                         question.dictionaryID = formData["dictionaryID"]
-
+                        question.unit = formData["unit"]
                         group.questions.append(question)
                         return .movedPermanently(cancelUrl)
                     default:
@@ -287,6 +296,9 @@ class WebApplication {
                     data["name"] = question.label
                     data["createDate"] = question.createDate.getFormattedDate(format: "yyyy-MM-dd")
                     data["type"] = question.dataType.title
+                    if let unit = question.unit {
+                        data["unit"] = Template.htmlNode(type: "span", attributes: ["class":"label label-green"], content: unit)
+                    }
                     data["questionID"] = question.id
                     data["deleteURL"] = "\(url)&groupID=\(group.id)&questionID=\(question.id)&action=deleteQuestion"
                     data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"

@@ -13,7 +13,7 @@
             <tr>
               <td><i data-feather="file-text" class="text-light-gray mx-2" style="height: 16px;"></i> <a href="" class="text-gray">{name}</a></td>
               <td>{createDate}</td>
-              <td><span class="label label-purple">{type}</span></td>
+              <td><span class="label label-purple">{type}</span> {unit}</td>
               <td>
                 <div class="dropdown">
                   <button class="btn text-light-gray" type="button" id="dropdownMenuButton{questionID}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

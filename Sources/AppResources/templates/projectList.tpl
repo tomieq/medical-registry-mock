@@ -18,7 +18,7 @@
               <td><a href="/editProject?projectID={projectID}" class="text-gray">{name}</a></td>
               <td><span class="label label-purple">{status}</span></td>
               <td>
-                {owner}
+                John Doe
               </td>
             </tr>
             [END project]
