@@ -173,15 +173,6 @@ class WebApplication {
                     activeGroup = nil
                 case "deleteQuestion":
                     activeGroup?.questions = activeGroup?.questions.filter{ $0.id != request.queryParam("questionID") } ?? []
-                case "renameGroup":
-                    guard let group = activeGroup else { return .notFound }
-                    let form = Form(url: "/renameGroup", method: "POST")
-                        .addInputText(name: "name", label: "Nazwa Grupy", value: group.name, labelCSSClass: "text-gray font-13")
-                        .addHidden(name: "projectID", value: project.id)
-                        .addHidden(name: "groupID", value: group.id)
-                        .addSubmit(name: "submit", label: "Zmień")
-                        .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
-                    page.assign(variables: ["form":form.output()], inNest: "addGroup")
                 case "addParameter":
                     if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, page: page) {
                         return response
@@ -246,7 +237,7 @@ class WebApplication {
                     data["name"] = group.name
                     data["groupID"] = group.id
                     data["deleteURL"] = "\(url)&groupID=\(group.id)&action=deleteGroup"
-                    data["renameURL"] = "\(url)&groupID=\(group.id)&action=renameGroup"
+                    data["renameURL"] = "/renameGroup?groupID=\(group.id)&projectID=\(project.id)"
                     data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
                     data["checked"] = group.canBeCopied ? "checked" : ""
                     table.assign(variables: data, inNest: "group")
@@ -272,6 +263,22 @@ class WebApplication {
             guard let groupID = request.queryParam("groupID"), let group = project.findGroup(id: groupID) else { return .notFound }
             group.canBeCopied = Bool(request.queryParam("value") ?? "false") ?? false
             return .noContent
+        }
+        
+        // MARK: /renameGroup
+        server.GET["/renameGroup"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
+            let name = self.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
+
+            let form = Form(url: "/renameGroup", method: "POST")
+                .addInputText(name: "name", label: "Nazwa Grupy", value: name, labelCSSClass: "text-gray font-13")
+                .addHidden(name: "projectID", value: projectID)
+                .addHidden(name: "groupID", value: groupID)
+                .addSubmit(name: "submit", label: "Zmień")
+                .addRaw(html: "<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
+
+            return .ok(.html(self.wrapAsLayer(width: 500, title: "Zmień nazwę grupy", content: form.output())))
         }
         
         server.GET["/addGroup"]  = { request, responseHeaders in
