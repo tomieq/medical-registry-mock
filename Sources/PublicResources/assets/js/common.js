@@ -27,8 +27,23 @@ $(document).ready(function () {
 	  });
 	  // run when page loads
 	  newViewport(viewport);
+    
+        jQuery.ajaxSetup({
+          beforeSend: function() {
+             $('#loader').show();
+          },
+          complete: function(){
+             $('#loader').hide();
+          },
+          success: function() {}
+        });
+      $('#loader').hide();
 });
 
 function newViewport(viewport) {
 	console.log("viewport=" + viewport);
+}
+
+function openLayer(url) {
+    $(body).load(url);
 }

@@ -47,7 +47,7 @@
     {inline_notice_warning}
     {inline_notice_success}
     {inline_notice_info}
-
+    <div id="loader">Ładowanie danych...</div>
     {page}
 
   <footer>
