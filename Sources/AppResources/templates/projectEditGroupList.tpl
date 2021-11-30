@@ -19,7 +19,7 @@
                   </button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{groupID}">
                     <a class="dropdown-item font-14 text-light-gray" href="#" onclick="openLayer('{renameURL}');">Zmień nazwę</a>
-                    <a class="dropdown-item font-14 text-light-gray" href="{deleteURL}">Usuń</a>
+                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="openLayer('{deleteURL}');">Usuń</a>
                   </div>
                 </div>
               </td>

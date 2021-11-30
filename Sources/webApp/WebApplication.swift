@@ -138,7 +138,7 @@ class WebApplication {
             return .movedPermanently("/projectList")
         }
         
-        // MARK: edit project
+        // MARK: /editProject
         server["/editProject"] = { request, responseHeaders in
             
             guard let project = (self.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
@@ -236,7 +236,7 @@ class WebApplication {
                     data["projectID"] = project.id
                     data["name"] = group.name
                     data["groupID"] = group.id
-                    data["deleteURL"] = "\(url)&groupID=\(group.id)&action=deleteGroup"
+                    data["deleteURL"] = "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)"
                     data["renameURL"] = "/renameGroup?groupID=\(group.id)&projectID=\(project.id)"
                     data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
                     data["checked"] = group.canBeCopied ? "checked" : ""
@@ -265,6 +265,18 @@ class WebApplication {
             return .noContent
         }
         
+        // MARK: /confirmGroupRemoval
+        server.GET["/confirmGroupRemoval"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
+            let name = self.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
+
+            var html = "Czy na pewno chcesz usunąć grupę <b>\(name)</b>?<br><br>"
+            html.append("<a href='/editProject?projectID=\(projectID)&action=deleteGroup&groupID=\(groupID)' class='btn btn-purple'>Potwierdzam</a> ")
+            html.append("<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
+            return .ok(.html(self.wrapAsLayer(width: 500, title: "Usuwanie grupy", content: html)))
+        }
+        
         // MARK: /renameGroup
         server.GET["/renameGroup"]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
@@ -281,6 +293,7 @@ class WebApplication {
             return .ok(.html(self.wrapAsLayer(width: 500, title: "Zmień nazwę grupy", content: form.output())))
         }
         
+        // MARK: /addGroup
         server.GET["/addGroup"]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let activeGroupID = request.queryParam("activeGroupID") else { return .badRequest(nil) }
