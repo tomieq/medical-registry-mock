@@ -48,6 +48,7 @@
     {inline_notice_success}
     {inline_notice_info}
     <div id="loader">Ładowanie danych...</div>
+    <div id="layerContainer"></div>
     {page}
 
   <footer>

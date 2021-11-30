@@ -45,5 +45,9 @@ function newViewport(viewport) {
 }
 
 function openLayer(url) {
-    $(body).load(url);
+    $('#layerContainer').load(url);
+}
+
+function closeLayer() {
+    $("#layer").remove();
 }

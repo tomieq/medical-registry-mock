@@ -173,14 +173,6 @@ class WebApplication {
                     activeGroup = nil
                 case "deleteQuestion":
                     activeGroup?.questions = activeGroup?.questions.filter{ $0.id != request.queryParam("questionID") } ?? []
-                case "addGroup":
-                    let form = Form(url: "/addGroup", method: "POST")
-                        .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
-                        .addHidden(name: "projectID", value: project.id)
-                        .addHidden(name: "groupID", value: activeGroup?.id ?? "")
-                        .addSubmit(name: "submit", label: "Dodaj")
-                        .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
-                    page.assign(variables: ["form":form.output()], inNest: "addGroup")
                 case "renameGroup":
                     guard let group = activeGroup else { return .notFound }
                     let form = Form(url: "/renameGroup", method: "POST")
@@ -214,7 +206,7 @@ class WebApplication {
                     break
                 }
             }
-            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, editProjectUrl: url)
+            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, projectID: project.id)
             for group in project.groups {
                 self.addGroupToTreeMenu(page, group: group, activeGroup: activeGroup, editProjectUrl: url)
             }
@@ -280,6 +272,19 @@ class WebApplication {
             guard let groupID = request.queryParam("groupID"), let group = project.findGroup(id: groupID) else { return .notFound }
             group.canBeCopied = Bool(request.queryParam("value") ?? "false") ?? false
             return .noContent
+        }
+        
+        server.GET["/addGroup"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let activeGroupID = request.queryParam("activeGroupID") else { return .badRequest(nil) }
+
+            let form = Form(url: "/addGroup", method: "POST")
+                .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
+                .addHidden(name: "projectID", value: projectID)
+                .addHidden(name: "groupID", value: activeGroupID)
+                .addSubmit(name: "submit", label: "Dodaj")
+                .addRaw(html: "<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
+            return .ok(.html(self.wrapAsLayer(width: 500, title: "Dodaj grupę", content: form.output())))
         }
         
         server.POST["/addGroup"] = { request, responseHeaders in
@@ -388,6 +393,12 @@ class WebApplication {
         self.projects.append(sampleProject)
     }
     
+    private func wrapAsLayer(width: Int, title: String, content: String) -> String {
+        let template = Template(raw: Resource.getAppResource(relativePath: "templates/layer.tpl"))
+        template.assign(variables: ["title": title, "content": content, "width": "\(width)"])
+        return template.output()
+    }
+    
     private func getMainTemplate(_ request: HttpRequest) -> Template {
         let template = Template(raw: Resource.getAppResource(relativePath: "templates/main.tpl"))
         let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
@@ -397,7 +408,7 @@ class WebApplication {
         return template
     }
     
-    private func addCardsToProjectEditTemplate(_ page: Template, activeGroup: ProjectGroup?, editProjectUrl: String) {
+    private func addCardsToProjectEditTemplate(_ page: Template, activeGroup: ProjectGroup?, projectID: String) {
         let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
         
         var cardGroup: [String:String] = [:]
@@ -405,7 +416,7 @@ class WebApplication {
         cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
         
         if activeGroup?.questions.isEmpty ?? true {
-            cardGroup["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addGroup"
+            cardGroup["url"] = "/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(projectID)"
         } else {
             cardGroup["url"] = "#"
             cardGroup["disabled"] = "disabled"
@@ -417,7 +428,7 @@ class WebApplication {
         cardParameter["title"] = "Dodaj parametr"
         cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
         if let group = activeGroup, group.groups.isEmpty {
-            cardParameter["url"] = "\(editProjectUrl)&groupID=\(activeGroup?.id ?? "")&action=addParameter"
+            cardParameter["url"] = "/addParameter?&groupID=\(activeGroup?.id ?? "")&projectID=\(projectID)"
         } else {
             cardParameter["url"] = "#"
             cardParameter["disabled"] = "disabled"
@@ -427,7 +438,7 @@ class WebApplication {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-        cardDictionary["url"] = "\(editProjectUrl)&action=dictionaryList"
+        cardDictionary["url"] = "/editDictionaries"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())
