@@ -416,21 +416,23 @@ class WebApplication {
         cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
         
         if activeGroup?.questions.isEmpty ?? true {
-            cardGroup["url"] = "/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(projectID)"
+            cardGroup["onclick"] = "openLayer('/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(projectID)');"
+            cardGroup["href"] = "#"
         } else {
-            cardGroup["url"] = "#"
+            cardGroup["href"] = "#"
             cardGroup["disabled"] = "disabled"
         }
         cardView.assign(variables: cardGroup, inNest: "card")
         
-        
+        let url = "/editProject?projectID=\(projectID)"
         var cardParameter: [String:String] = [:]
         cardParameter["title"] = "Dodaj parametr"
         cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
         if let group = activeGroup, group.groups.isEmpty {
-            cardParameter["url"] = "/addParameter?&groupID=\(activeGroup?.id ?? "")&projectID=\(projectID)"
+            cardParameter["href"] = "\(url)&groupID=\(activeGroup?.id ?? "")&action=addParameter"
+
         } else {
-            cardParameter["url"] = "#"
+            cardParameter["href"] = "#"
             cardParameter["disabled"] = "disabled"
         }
         cardView.assign(variables: cardParameter, inNest: "card")
@@ -438,7 +440,7 @@ class WebApplication {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-        cardDictionary["url"] = "/editDictionaries"
+        cardDictionary["href"] = "\(url)&action=dictionaryList"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())
