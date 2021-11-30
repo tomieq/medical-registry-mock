@@ -64,19 +64,14 @@ class WebApplication {
             cardProjects["desc"] = "Dodawaj lub modyfikuj dodane przez siebie dane, w swoich projektach lub w projektach innych użytkowników, w których bierzesz udział."
             cardProjects["url"] = "/projects"
             
-            var cardNewProject: [String:String] = [:]
-            cardNewProject["title"] = "Nowy projekt"
-            cardNewProject["desc"] = "Stwórz nowy projekt, w którym będziesz mógł zbierać dane o pacjentach i zaprosić innych użytkowników do kontrybuowania w projekcie."
-            cardNewProject["url"] = "#"
+            var cardUsers: [String:String] = [:]
+            cardUsers["title"] = "Użytkownicy"
+            cardUsers["desc"] = "Zarządzanie użytkownikami w systemie."
+            cardUsers["url"] = "#"
             
-            var cardEditProject: [String:String] = [:]
-            cardEditProject["title"] = "Edytuj istniejący projekt"
-            cardEditProject["desc"] = "Edytuj istniejący projekt, który jeszcze nie wystartował."
-            cardEditProject["url"] = "#"
             
             cardView.assign(variables: cardProjects, inNest: "card")
-            cardView.assign(variables: cardNewProject, inNest: "card")
-            cardView.assign(variables: cardEditProject, inNest: "card")
+            cardView.assign(variables: cardUsers, inNest: "card")
             
             container.assign("page", cardView.output())
             template.assign("page", container.output())
