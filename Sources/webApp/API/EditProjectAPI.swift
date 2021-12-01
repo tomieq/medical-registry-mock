@@ -104,6 +104,18 @@ class EditProjectAPI: BaseAPI {
             return self.treeMenu(project: project, activeGroup: activeGroup).asResponse
         }
         
+        // MARK: /editCardsMenu
+        server.GET["/editCardsMenu"] = { request, responseHeaders in
+            guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
+                return .notFound
+            }
+            var activeGroup: ProjectGroup?
+            if let groupID = request.queryParam("groupID") {
+                activeGroup = project.findGroup(id: groupID)
+            }
+            return self.cardsMenu(project: project, activeGroup: activeGroup).asResponse
+        }
+
         // MARK: /groupList
         server.GET["/groupList"] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
@@ -143,7 +155,7 @@ class EditProjectAPI: BaseAPI {
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let activeGroupID = request.queryParam("activeGroupID") else { return .badRequest(nil) }
 
-            let form = Form(url: "/addGroup", method: "POST")
+            let form = Form(url: "/addGroup", method: "POST", ajax: true)
                 .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
                 .addHidden(name: "projectID", value: projectID)
                 .addHidden(name: "groupID", value: activeGroupID)
@@ -172,8 +184,14 @@ class EditProjectAPI: BaseAPI {
             } else {
                 project.groups.append(group)
             }
-            let parentGroupID = project.parentGroup(id: activeGroup?.id ?? "")?.id ?? ""
-            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(parentGroupID)")
+            let activeGroupID = activeGroup?.id ?? ""
+            
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: activeGroupID))
+            js.add(.loadEditProjectCardsMenu(projectID: project.id, groupID: activeGroupID))
+            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: activeGroupID))
+            return js.response
         }
         
         // MARK: /renameGroup
