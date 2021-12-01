@@ -11,7 +11,7 @@
             [START group]
             <tr>
               <td><i data-feather="folder" class="text-light-gray mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}" class="text-gray">{name}</a></td>
-              <td><input type="checkbox" data-url="{toggleCopyUrl}" {checked} /></td>
+              <td><input type="checkbox" data-url="{toggleCopyUrl}" onchange="checkboxChanged(this);" {checked} /></td>
               <td>
                 <div class="dropdown">
                   <button class="btn text-light-gray" type="button" id="dropdownMenuButton{groupID}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

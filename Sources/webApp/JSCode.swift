@@ -35,7 +35,7 @@ extension JSCode {
         case .closeLayer:
             return "closeLayer();";
         case .loadEditProjectTreeMenu(let projectID, let groupID):
-            return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID ?? "")');";
+            return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID)');";
         }
     }
 }

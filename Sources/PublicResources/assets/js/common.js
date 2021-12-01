@@ -64,3 +64,11 @@ function formSubmit(submitUrl, form) {
         });
     return false;
 }
+
+function checkboxChanged(checkbox) {
+    if (checkbox.checked) {
+        $( "#result" ).load( checkbox.dataset.url + "&value=true" );
+    } else {
+        $( "#result" ).load( checkbox.dataset.url + "&value=false" );
+    }
+}

@@ -83,9 +83,6 @@ class EditProjectAPI: BaseAPI {
             } else {
 
                 page.assign("table", self.groupList(project: project, group: activeGroup))
-
-                let js = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.js.tpl"))
-                template.assign(variables: ["code":js.output()], inNest: "jsOnReadyCode")
             }
 
             var templateVariables: [String:String] = [:]
