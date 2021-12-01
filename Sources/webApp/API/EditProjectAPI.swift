@@ -44,7 +44,6 @@ class EditProjectAPI: BaseAPI {
 
             
             if let action = request.queryParam("action") {
-                let cancelUrl = "\(url)&groupID=\(activeGroup?.id ?? "")"
                 switch action {
                 case "deleteGroup":
                     project.removeGroup(id: activeGroup?.id ?? "")
@@ -76,9 +75,7 @@ class EditProjectAPI: BaseAPI {
                 }
             }
             self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, projectID: project.id)
-            for group in project.groups {
-                self.addGroupToTreeMenu(page, group: group, activeGroup: activeGroup, editProjectUrl: url)
-            }
+
             
             if let group = activeGroup, group.questions.count > 0 {
                 let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditQuestionList.tpl"))
@@ -126,7 +123,7 @@ class EditProjectAPI: BaseAPI {
             var templateVariables: [String:String] = [:]
             templateVariables["projectName"] = project.name
             templateVariables["projectID"] = project.id
-            templateVariables["css"] = activeGroup == nil ? "treeItemActive" : "treeItemInactive"
+            templateVariables["tree"] = self.treeMenu(project: project, activeGroup: activeGroup)
             page.assign(variables: templateVariables)
             
             container.assign("page", page.output())
@@ -406,6 +403,20 @@ class EditProjectAPI: BaseAPI {
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())
+    }
+    
+    private func treeMenu(project: Project, activeGroup: ProjectGroup?) -> String {
+        let template = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditTree.tpl"))
+        let url = "/editProject?projectID=\(project.id)"
+        for group in project.groups {
+            self.addGroupToTreeMenu(template, group: group, activeGroup: activeGroup, editProjectUrl: url)
+        }
+        var templateVariables: [String:String] = [:]
+        templateVariables["css"] = activeGroup == nil ? "treeItemActive" : "treeItemInactive"
+        templateVariables["projectID"] = project.id
+        templateVariables["projectName"] = project.name
+        template.assign(variables: templateVariables)
+        return template.output()
     }
     
     private func addGroupToTreeMenu(_ template: Template, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 1, editProjectUrl: String) {
