@@ -56,7 +56,6 @@ class EditProjectAPI: BaseAPI {
                     if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
                         return response
                     }
-                    self.dictionaryPreview(request: request, page: page, project: project)
                 default:
                     break
                 }
@@ -292,12 +291,23 @@ class EditProjectAPI: BaseAPI {
             for dictionary in project.dictionaries {
                 var data: [String:String] = [:]
                 data["name"] = dictionary.name
-                data["projectID"] = project.id
+                data["previewClick"] = JSCode.loadAsLayer(url: "/dictionaryPreview?projectID=\(project.id)&preview=\(dictionary.id)").js
                 data["dictionaryID"] = dictionary.id
                 list.assign(variables: data, inNest: "dictionary")
             }
             
             return list.asResponse()
+        }
+        
+        server.GET["/dictionaryPreview"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            guard let dictionaryID = request.queryParam("preview") else { return .notFound }
+            guard let dictionary = (project.dictionaries.first{ $0.id == dictionaryID }) else { return .notFound }
+            
+            return self.wrapAsLayer(width: 600, title: dictionary.name, content: self.dictionaryPreview(project: project, dictionary: dictionary)).asResponse
         }
     }
     
@@ -555,16 +565,14 @@ class EditProjectAPI: BaseAPI {
     }
     
     
-    private func dictionaryPreview(request: HttpRequest, page: Template, project: Project) {
-        guard let dictionaryID = request.queryParam("preview") else { return }
-        guard let dictionary = (project.dictionaries.first{ $0.id == dictionaryID }) else { return }
+    private func dictionaryPreview(project: Project, dictionary: ProjectDictionary) -> String {
         var html = Template.htmlNode(type: "h4", content: dictionary.name)
         for option in dictionary.options {
             html.append(Template.htmlNode(type: "p", content: option.title))
         }
-        let cancelUrl = "/editProject?projectID=\(project.id)&action=dictionaryList"
-        html.append(Template.htmlNode(type: "a", attributes: ["href":cancelUrl, "class":"btn btn-purple"], content: "Zamknij"))
-        page.assign(variables: ["form":html], inNest: "wideForm")
+        let cancelJS = JSCode.closeLayer.js
+        html.append(Template.htmlNode(type: "span", attributes: ["onclick": cancelJS, "class":"btn btn-purple hand"], content: "Zamknij"))
+        return html
     }
     
     private func wrapAsLayer(width: Int, title: String, content: String) -> String {

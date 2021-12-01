@@ -14,14 +14,14 @@
           <tbody>
             [START dictionary]
             <tr>
-              <td><a href="/editProject?projectID={projectID}&action=dictionaryList&preview={dictionaryID}" class="text-gray">{name}</a></td>
+              <td><a href="#" onclick="{previewClick}" class="text-gray">{name}</a></td>
               <td>
                 <div class="dropdown">
                   <button class="btn text-light-gray" type="button" id="dropdownMenuButton{dictionaryID}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i data-feather="more-vertical" class="mx-2" style="height: 16px;"></i>
                   </button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{dictionaryID}">
-                    <a class="dropdown-item font-14 text-light-gray" href="/editProject?projectID={projectID}&action=dictionaryList&preview={dictionaryID}">Podgląd</a>
+                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="{previewClick}">Podgląd</a>
                   </div>
                 </div>
               </td>
