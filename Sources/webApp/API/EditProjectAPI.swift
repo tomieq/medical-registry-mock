@@ -107,6 +107,18 @@ class EditProjectAPI: BaseAPI {
             }
             return self.treeMenu(project: project, activeGroup: activeGroup).asResponse
         }
+        
+        // MARK: /groupList
+        server.GET["/groupList"] = { request, responseHeaders in
+            guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
+                return .notFound
+            }
+            var activeGroup: ProjectGroup?
+            if let groupID = request.queryParam("groupID") {
+                activeGroup = project.findGroup(id: groupID)
+            }
+            return self.groupList(project: project, group: activeGroup).asResponse
+        }
     
         // MARK: /toggleGroupCanBeCopied
         server.GET["/toggleGroupCanBeCopied"] = { request, responseHeaders in
@@ -198,6 +210,7 @@ class EditProjectAPI: BaseAPI {
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: groupID))
+            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: groupID))
             return js.response
         }
     }

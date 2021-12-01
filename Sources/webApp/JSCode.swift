@@ -25,6 +25,7 @@ enum JSCode {
     case loadAsLayer(url: String)
     case closeLayer
     case loadEditProjectTreeMenu(projectID: String, groupID: String)
+    case loadEditProjectGroupList(projectID: String, groupID: String)
 }
 
 extension JSCode {
@@ -36,6 +37,8 @@ extension JSCode {
             return "closeLayer();";
         case .loadEditProjectTreeMenu(let projectID, let groupID):
             return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID)');";
+        case .loadEditProjectGroupList(let projectID, let groupID):
+            return "$('#contentTable').load('/groupList?projectID=\(projectID)&groupID=\(groupID)');";
         }
     }
 }

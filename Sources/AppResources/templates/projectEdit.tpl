@@ -5,7 +5,9 @@
     <div class="col-9">
         {cards}
             
+        <div id="contentTable">
         {table}
+        </div>
     </div>
 </div>
 [START addGroup]
@@ -23,12 +25,3 @@
 </div>
 [END wideForm]
 
-
-<style>
-.treeItemActive {
-        border-left: 4px solid #7367F0
-}
-.treeItemInactive {
-        border-left: 4px solid #fff
-}
-</style>
