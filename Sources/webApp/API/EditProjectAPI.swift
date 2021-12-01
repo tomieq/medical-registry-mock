@@ -45,9 +45,6 @@ class EditProjectAPI: BaseAPI {
             
             if let action = request.queryParam("action") {
                 switch action {
-                case "deleteGroup":
-                    project.removeGroup(id: activeGroup?.id ?? "")
-                    activeGroup = nil
                 case "deleteQuestion":
                     activeGroup?.questions = activeGroup?.questions.filter{ $0.id != request.queryParam("questionID") } ?? []
                 case "addParameter":
@@ -145,9 +142,28 @@ class EditProjectAPI: BaseAPI {
             let name = self.dataStore.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
 
             var html = "Czy na pewno chcesz usunąć grupę <b>\(name)</b>?<br><br>"
-            html.append("<a href='/editProject?projectID=\(projectID)&action=deleteGroup&groupID=\(groupID)' class='btn btn-purple'>Potwierdzam</a> ")
-            html.append("<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
-            return .ok(.html(self.wrapAsLayer(width: 500, title: "Usuwanie grupy", content: html)))
+            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: "/deleteGroup?projectID=\(projectID)&groupID=\(groupID)").js)\" class='btn btn-purple'>Potwierdzam</a> ")
+            html.append("<a href='#' onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative'>Anuluj</a>")
+            return self.wrapAsLayer(width: 500, title: "Usuwanie grupy", content: html).asResponse
+        }
+        
+        // MARK: /deleteGroup
+        server.GET["/deleteGroup"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let groupID = request.queryParam("groupID") else { return .notFound }
+            
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
+            project.removeGroup(id: groupID)
+            
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.loadEditProjectCardsMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
+            return js.response
         }
         
         // MARK: /addGroup
@@ -166,7 +182,7 @@ class EditProjectAPI: BaseAPI {
         
         server.POST["/addGroup"] = { request, responseHeaders in
             let formData = request.flatFormData()
-            guard let project = (self.dataStore.projects.filter{ $0.id == formData["projectID"] }.first) else {
+            guard let project = (self.dataStore.projects.first{ $0.id == formData["projectID"] }) else {
                 return .notFound
             }
             var activeGroup: ProjectGroup?

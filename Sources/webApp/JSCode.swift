@@ -22,6 +22,7 @@ class JSResponse {
 }
 
 enum JSCode {
+    case loadScript(url: String)
     case loadAsLayer(url: String)
     case closeLayer
     case loadEditProjectTreeMenu(projectID: String, groupID: String)
@@ -32,6 +33,8 @@ enum JSCode {
 extension JSCode {
     var js: String {
         switch self {
+        case .loadScript(let url):
+            return "$.getScript('\(url)');"
         case .loadAsLayer(let url):
             return "openLayer('\(url)');"
         case .closeLayer:
