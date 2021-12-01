@@ -3,8 +3,9 @@
         {tree}
     </div>
     <div class="col-9">
+        <div id="cards">
         {cards}
-            
+        </div>
         <div id="contentTable">
         {table}
         </div>

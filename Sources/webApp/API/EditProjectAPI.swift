@@ -74,14 +74,9 @@ class EditProjectAPI: BaseAPI {
                     break
                 }
             }
-            self.addCardsToProjectEditTemplate(page, activeGroup: activeGroup, projectID: project.id)
-
-            
             if let group = activeGroup, group.questions.count > 0 {
-
                 page.assign("table", self.parameterList(project: project, group: group))
             } else {
-
                 page.assign("table", self.groupList(project: project, group: activeGroup))
             }
 
@@ -89,6 +84,7 @@ class EditProjectAPI: BaseAPI {
             templateVariables["projectName"] = project.name
             templateVariables["projectID"] = project.id
             templateVariables["tree"] = self.treeMenu(project: project, activeGroup: activeGroup)
+            templateVariables["cards"] = self.cardsMenu(project: project, activeGroup: activeGroup)
             page.assign(variables: templateVariables)
             
             container.assign("page", page.output())
@@ -361,7 +357,7 @@ class EditProjectAPI: BaseAPI {
         return nil
     }
     
-    private func addCardsToProjectEditTemplate(_ page: Template, activeGroup: ProjectGroup?, projectID: String) {
+    private func cardsMenu(project: Project, activeGroup: ProjectGroup?) -> String {
         let cardView = Template(raw: Resource.getAppResource(relativePath: "templates/dashboardCardView.tpl"))
         
         var cardGroup: [String:String] = [:]
@@ -369,7 +365,7 @@ class EditProjectAPI: BaseAPI {
         cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
         
         if activeGroup?.questions.isEmpty ?? true {
-            cardGroup["onclick"] = "openLayer('/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(projectID)');"
+            cardGroup["onclick"] = JSCode.loadAsLayer(url: "/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(project.id)").js
             cardGroup["href"] = "#"
         } else {
             cardGroup["href"] = "#"
@@ -377,7 +373,7 @@ class EditProjectAPI: BaseAPI {
         }
         cardView.assign(variables: cardGroup, inNest: "card")
         
-        let url = "/editProject?projectID=\(projectID)"
+        let url = "/editProject?projectID=\(project.id)"
         var cardParameter: [String:String] = [:]
         cardParameter["title"] = "Dodaj parametr"
         cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
@@ -396,7 +392,7 @@ class EditProjectAPI: BaseAPI {
         cardDictionary["href"] = "\(url)&action=dictionaryList"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
-        page.assign("cards", cardView.output())
+        return cardView.output()
     }
     
     private func parameterList(project: Project, group: ProjectGroup) -> String {
