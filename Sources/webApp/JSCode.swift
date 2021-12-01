@@ -23,6 +23,7 @@ class JSResponse {
 
 enum JSCode {
     case loadAsLayer(url: String)
+    case closeLayer
 }
 
 extension JSCode {
@@ -30,6 +31,8 @@ extension JSCode {
         switch self {
         case .loadAsLayer(let url):
             return "openLayer('\(url)');"
+        case .closeLayer:
+            return "closeLayer();";
         }
     }
 }
