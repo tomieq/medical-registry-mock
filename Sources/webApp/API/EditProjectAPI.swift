@@ -176,8 +176,8 @@ class EditProjectAPI: BaseAPI {
             } else {
                 project.groups.append(group)
             }
-            
-            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(activeGroup?.id ?? group.id)")
+            let parentGroupID = project.parentGroup(id: activeGroup?.id ?? "")?.id ?? ""
+            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(parentGroupID)")
         }
         
         // MARK: /renameGroup
@@ -193,7 +193,7 @@ class EditProjectAPI: BaseAPI {
                 .addSubmit(name: "submit", label: "Zmień")
                 .addRaw(html: "<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
 
-            return .ok(.html(self.wrapAsLayer(width: 500, title: "Zmień nazwę grupy", content: form.output())))
+            return self.wrapAsLayer(width: 500, title: "Zmień nazwę grupy", content: form.output()).asResponse
         }
         
         server.POST["/renameGroup"] = { request, responseHeaders in
@@ -207,10 +207,11 @@ class EditProjectAPI: BaseAPI {
             if let name = formData["name"], !name.isEmpty {
                 group.name = name
             }
+            let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: groupID))
-            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: groupID))
+            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
     }
