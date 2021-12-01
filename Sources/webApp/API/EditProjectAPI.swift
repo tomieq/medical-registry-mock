@@ -155,9 +155,15 @@ class EditProjectAPI: BaseAPI {
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
             }
-            let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
-            project.removeGroup(id: groupID)
+            let parentGroup = project.parentGroup(id: groupID)
+            let groups = (parentGroup?.groups ?? project.groups).sorted()
+            if let groupToRemove = project.findGroup(id: groupID) {
+                let sequence = groupToRemove.sequence
+                groups.filter{ $0.sequence > sequence }.forEach{ $0.sequence -= 1 }
+                project.removeGroup(id: groupID)
+            }
             
+            let parentGroupID = parentGroup?.id ?? ""
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
@@ -240,6 +246,43 @@ class EditProjectAPI: BaseAPI {
                 group.name = name
             }
             let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
+            return js.response
+        }
+        
+        // MARK: /moveGroup
+        server.GET["/moveGroup"] = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let groupID = request.queryParam("groupID") else { return .notFound }
+            guard let direction = request.queryParam("direction") else { return .notFound }
+            
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            guard let group = project.findGroup(id: groupID) else {
+                return .notFound
+            }
+            let parentGroup = project.parentGroup(id: groupID)
+            let groups = (parentGroup?.groups ?? project.groups).sorted()
+            if let index = groups.firstIndex(of: group) {
+                if direction == "up" {
+                    if group.sequence > 1 {
+                        group.sequence -= 1
+                        groups[safeIndex: index - 1]?.sequence += 1
+                    }
+                } else {
+                    if group.sequence < groups.count {
+                        group.sequence += 1
+                        groups[safeIndex: index + 1]?.sequence -= 1
+                    }
+                }
+            }
+            
+            let parentGroupID = parentGroup?.id ?? ""
+
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
@@ -471,6 +514,8 @@ class EditProjectAPI: BaseAPI {
             data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js
             data["onclickRename"] = JSCode.loadAsLayer(url: "/renameGroup?groupID=\(group.id)&projectID=\(project.id)").js
             data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
+            data["moveUpClick"] = JSCode.loadScript(url: "/moveGroup?groupID=\(group.id)&projectID=\(project.id)&direction=up").js
+            data["moveDownClick"] = JSCode.loadScript(url: "/moveGroup?groupID=\(group.id)&projectID=\(project.id)&direction=down").js
             data["checked"] = group.canBeCopied ? "checked" : ""
             table.assign(variables: data, inNest: "group")
         }

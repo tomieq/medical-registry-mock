@@ -100,3 +100,7 @@ a:hover {
 .treeItemInactive {
         border-left: 4px solid #fff
 }
+
+.hand {
+    cursor: pointer;
+}
