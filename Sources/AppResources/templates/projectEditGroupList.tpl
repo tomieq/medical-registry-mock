@@ -18,8 +18,8 @@
                     <i data-feather="more-vertical" class="mx-2" style="height: 16px;"></i>
                   </button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{groupID}">
-                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="openLayer('{renameURL}');">Zmień nazwę</a>
-                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="openLayer('{deleteURL}');">Usuń</a>
+                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="{onclickRename}">Zmień nazwę</a>
+                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="{onclickDelete}">Usuń</a>
                   </div>
                 </div>
               </td>

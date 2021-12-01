@@ -409,8 +409,8 @@ class EditProjectAPI: BaseAPI {
             data["projectID"] = project.id
             data["name"] = group.name
             data["groupID"] = group.id
-            data["deleteURL"] = "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)"
-            data["renameURL"] = "/renameGroup?groupID=\(group.id)&projectID=\(project.id)"
+            data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js
+            data["onclickRename"] = JSCode.loadAsLayer(url: "/renameGroup?groupID=\(group.id)&projectID=\(project.id)").js
             data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
             data["checked"] = group.canBeCopied ? "checked" : ""
             table.assign(variables: data, inNest: "group")
