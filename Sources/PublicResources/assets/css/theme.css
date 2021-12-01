@@ -7,7 +7,6 @@
     left: 0;
     margin: 0;
     padding: 0;
-    background: rgba(128, 128, 128, .85);
     text-align: center;
     color: black;
     padding: 270px 0;
@@ -92,4 +91,12 @@ a:hover {
 .label-green {
     color: #28C76F;
     background-color: #E5F7EE;
+}
+
+
+.treeItemActive {
+        border-left: 4px solid #7367F0
+}
+.treeItemInactive {
+        border-left: 4px solid #fff
 }
