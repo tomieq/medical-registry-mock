@@ -7,6 +7,10 @@
 
 import Foundation
 
+class DataStore {
+    var projects: [Project] = []
+}
+
 enum ProjectStatus {
     case created
     case ready
