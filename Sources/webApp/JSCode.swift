@@ -24,6 +24,7 @@ class JSResponse {
 enum JSCode {
     case loadAsLayer(url: String)
     case closeLayer
+    case loadEditProjectTreeMenu(projectID: String, groupID: String)
 }
 
 extension JSCode {
@@ -33,6 +34,8 @@ extension JSCode {
             return "openLayer('\(url)');"
         case .closeLayer:
             return "closeLayer();";
+        case .loadEditProjectTreeMenu(let projectID, let groupID):
+            return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID ?? "")');";
         }
     }
 }

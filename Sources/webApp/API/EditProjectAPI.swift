@@ -98,6 +98,18 @@ class EditProjectAPI: BaseAPI {
             template.assign("page", container.output())
             return template.asResponse()
         }
+        
+        // MARK: /editTreeMenu
+        server.GET["/editTreeMenu"] = { request, responseHeaders in
+            guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
+                return .notFound
+            }
+            var activeGroup: ProjectGroup?
+            if let groupID = request.queryParam("groupID") {
+                activeGroup = project.findGroup(id: groupID)
+            }
+            return self.treeMenu(project: project, activeGroup: activeGroup).asResponse
+        }
     
         // MARK: /toggleGroupCanBeCopied
         server.GET["/toggleGroupCanBeCopied"] = { request, responseHeaders in
@@ -165,7 +177,7 @@ class EditProjectAPI: BaseAPI {
             guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
             let name = self.dataStore.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
 
-            let form = Form(url: "/renameGroup", method: "POST")
+            let form = Form(url: "/renameGroup", method: "POST", ajax: true)
                 .addInputText(name: "name", label: "Nazwa Grupy", value: name, labelCSSClass: "text-gray font-13")
                 .addHidden(name: "projectID", value: projectID)
                 .addHidden(name: "groupID", value: groupID)
@@ -186,7 +198,10 @@ class EditProjectAPI: BaseAPI {
             if let name = formData["name"], !name.isEmpty {
                 group.name = name
             }
-            return .movedTemporarily("/editProject?projectID=\(project.id)&groupID=\(group.id)")
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: groupID))
+            return js.response
         }
     }
     

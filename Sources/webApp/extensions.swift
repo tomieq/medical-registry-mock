@@ -6,6 +6,14 @@
 //
 
 import Foundation
+import Swifter
+
+extension String {
+    
+    public var asResponse: HttpResponse {
+        return .ok(.html(self))
+    }
+}
 
 
 extension Optional {

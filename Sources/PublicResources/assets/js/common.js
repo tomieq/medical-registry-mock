@@ -34,6 +34,7 @@ $(document).ready(function () {
           },
           complete: function(){
              $('#loader').hide();
+             feather.replace();
           },
           success: function() {}
         });
