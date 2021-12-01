@@ -476,25 +476,23 @@ class EditProjectAPI: BaseAPI {
     
     private func treeMenu(project: Project, activeGroup: ProjectGroup?) -> String {
         let template = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditTree.tpl"))
-        let url = "/editProject?projectID=\(project.id)"
         for group in project.groups {
-            self.addGroupToTreeMenu(template, group: group, activeGroup: activeGroup, editProjectUrl: url)
+            self.addGroupToTreeMenu(template, project, group: group, activeGroup: activeGroup)
         }
         var templateVariables: [String:String] = [:]
         templateVariables["css"] = activeGroup == nil ? "treeItemActive" : "treeItemInactive"
-        templateVariables["projectID"] = project.id
+        templateVariables["onclick"] = JSCode.changeGroupContext(projectID: project.id, groupID: "").js
         templateVariables["projectName"] = project.name
         template.assign(variables: templateVariables)
         return template.output()
     }
     
-    private func addGroupToTreeMenu(_ template: Template, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 1, editProjectUrl: String) {
+    private func addGroupToTreeMenu(_ template: Template, _ project: Project, group: ProjectGroup, activeGroup: ProjectGroup?, level: Int = 1) {
         
-        let url = "\(editProjectUrl)&groupID=\(group.id)"
-        let uiTreeItem = UITreeItem(name: group.name, nestLevel: level, isActive: group.id == activeGroup?.id, url: url, hasChildren: !group.groups.isEmpty)
+        let uiTreeItem = UITreeItem(project: project, group: group, nestLevel: level, isActive: group.id == activeGroup?.id, hasChildren: !group.groups.isEmpty)
         template.assign(variables: uiTreeItem.getTemplateVariables(), inNest: "treeGroup")
         let level = level + 1
-        group.groups.forEach{ self.addGroupToTreeMenu(template, group: $0, activeGroup: activeGroup, level: level, editProjectUrl: editProjectUrl) }
+        group.groups.forEach{ self.addGroupToTreeMenu(template, project, group: $0, activeGroup: activeGroup, level: level) }
     }
     
     
