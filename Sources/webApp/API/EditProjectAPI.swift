@@ -57,16 +57,6 @@ class EditProjectAPI: BaseAPI {
                         return response
                     }
                     self.dictionaryPreview(request: request, page: page, project: project)
-                    let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
-                    list.assign("projectID", project.id)
-                    for dictionary in project.dictionaries {
-                        var data: [String:String] = [:]
-                        data["name"] = dictionary.name
-                        data["projectID"] = project.id
-                        data["dictionaryID"] = dictionary.id
-                        list.assign(variables: data, inNest: "dictionary")
-                    }
-                    page.assign("table", list.output())
                 default:
                     break
                 }
@@ -289,6 +279,26 @@ class EditProjectAPI: BaseAPI {
             js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
+        
+        // MARK: /dictionaryList
+        server.GET["/dictionaryList"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+    
+            let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
+            list.assign("projectID", projectID)
+            for dictionary in project.dictionaries {
+                var data: [String:String] = [:]
+                data["name"] = dictionary.name
+                data["projectID"] = project.id
+                data["dictionaryID"] = dictionary.id
+                list.assign(variables: data, inNest: "dictionary")
+            }
+            
+            return list.asResponse()
+        }
     }
     
     private func addParameter(request: HttpRequest, activeGroup: ProjectGroup?, url: String, project: Project, page: Template) -> HttpResponse? {
@@ -468,7 +478,8 @@ class EditProjectAPI: BaseAPI {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-        cardDictionary["href"] = "\(url)&action=dictionaryList"
+        cardDictionary["onclick"] = JSCode.loadEditProjectDictionaryList(projectID: project.id).js
+        cardDictionary["href"] = "#"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         return cardView.output()

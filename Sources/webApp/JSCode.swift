@@ -29,6 +29,7 @@ enum JSCode {
     case loadEditProjectTreeMenu(projectID: String, groupID: String)
     case loadEditProjectGroupList(projectID: String, groupID: String)
     case loadEditProjectCardsMenu(projectID: String, groupID: String)
+    case loadEditProjectDictionaryList(projectID: String)
 }
 
 extension JSCode {
@@ -52,6 +53,8 @@ extension JSCode {
             return "$('#contentTable').load('/groupList?projectID=\(projectID)&groupID=\(groupID)');";
         case .loadEditProjectCardsMenu(let projectID, let groupID):
             return "$('#cards').load('/editCardsMenu?projectID=\(projectID)&groupID=\(groupID)');";
+        case .loadEditProjectDictionaryList(let projectID):
+            return "$('#contentTable').load('/dictionaryList?projectID=\(projectID)');";
         }
     }
 }
