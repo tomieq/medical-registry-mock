@@ -78,46 +78,14 @@ class EditProjectAPI: BaseAPI {
 
             
             if let group = activeGroup, group.questions.count > 0 {
-                let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditQuestionList.tpl"))
-                for question in activeGroup?.questions ?? [] {
-                    var data: [String:String] = [:]
-                    data["name"] = question.label
-                    data["createDate"] = question.createDate.getFormattedDate(format: "yyyy-MM-dd")
-                    data["type"] = question.dataType.title
-                    if let unit = question.unit {
-                        data["unit"] = Template.htmlNode(type: "span", attributes: ["class":"label label-green"], content: unit)
-                    }
-                    data["questionID"] = question.id
-                    data["deleteURL"] = "\(url)&groupID=\(group.id)&questionID=\(question.id)&action=deleteQuestion"
-                    data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"
-                    
-                    switch question.dataType {
-                    case .number:
-                        data["type"]?.append(" (\(question.minValue.toOptionalString() ?? "-∞") do \(question.maxValue.toOptionalString() ?? "+∞"))")
-                    case .dictionary:
-                        break
-                    default:
-                        break
-                    }
-                    table.assign(variables: data, inNest: "question")
-                }
-                page.assign("table", table.output())
+
+                page.assign("table", self.parameterList(project: project, group: group))
             } else {
-                let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.tpl"))
+
+                page.assign("table", self.groupList(project: project, group: activeGroup))
+
                 let js = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.js.tpl"))
                 template.assign(variables: ["code":js.output()], inNest: "jsOnReadyCode")
-                for group in activeGroup?.groups ?? project.groups {
-                    var data: [String:String] = [:]
-                    data["projectID"] = project.id
-                    data["name"] = group.name
-                    data["groupID"] = group.id
-                    data["deleteURL"] = "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)"
-                    data["renameURL"] = "/renameGroup?groupID=\(group.id)&projectID=\(project.id)"
-                    data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
-                    data["checked"] = group.canBeCopied ? "checked" : ""
-                    table.assign(variables: data, inNest: "group")
-                }
-                page.assign("table", table.output())
             }
 
             var templateVariables: [String:String] = [:]
@@ -403,6 +371,51 @@ class EditProjectAPI: BaseAPI {
         cardView.assign(variables: cardDictionary, inNest: "card")
         
         page.assign("cards", cardView.output())
+    }
+    
+    private func parameterList(project: Project, group: ProjectGroup) -> String {
+        let url = "/editProject?projectID=\(project.id)"
+        let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditQuestionList.tpl"))
+        for question in group.questions {
+            var data: [String:String] = [:]
+            data["name"] = question.label
+            data["createDate"] = question.createDate.getFormattedDate(format: "yyyy-MM-dd")
+            data["type"] = question.dataType.title
+            if let unit = question.unit {
+                data["unit"] = Template.htmlNode(type: "span", attributes: ["class":"label label-green"], content: unit)
+            }
+            data["questionID"] = question.id
+            data["deleteURL"] = "\(url)&groupID=\(group.id)&questionID=\(question.id)&action=deleteQuestion"
+            data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"
+            
+            switch question.dataType {
+            case .number:
+                data["type"]?.append(" (\(question.minValue.toOptionalString() ?? "-∞") do \(question.maxValue.toOptionalString() ?? "+∞"))")
+            case .dictionary:
+                break
+            default:
+                break
+            }
+            table.assign(variables: data, inNest: "question")
+        }
+        return table.output()
+    }
+
+    private func groupList(project: Project, group: ProjectGroup?) -> String {
+
+        let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.tpl"))
+        for group in group?.groups ?? project.groups {
+            var data: [String:String] = [:]
+            data["projectID"] = project.id
+            data["name"] = group.name
+            data["groupID"] = group.id
+            data["deleteURL"] = "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)"
+            data["renameURL"] = "/renameGroup?groupID=\(group.id)&projectID=\(project.id)"
+            data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
+            data["checked"] = group.canBeCopied ? "checked" : ""
+            table.assign(variables: data, inNest: "group")
+        }
+        return table.output()
     }
     
     private func treeMenu(project: Project, activeGroup: ProjectGroup?) -> String {
