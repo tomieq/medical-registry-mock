@@ -160,7 +160,7 @@ class WebApplication {
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Projekty"])
             container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
-            container.assign(variables: ["title" : "Dodaj projekt"], inNest: "item")
+            container.assign(variables: ["title" : project.name], inNest: "item")
             
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
 
@@ -550,6 +550,8 @@ class WebApplication {
             question.minValue = formData["minValue"]?.toInt()
             question.dictionaryID = formData["dictionaryID"]
             question.unit = formData["unit"]
+            
+            if question.label?.isEmpty ?? true { question.label = "Brak nazwy" }
             group.questions.append(question)
             return .movedPermanently(cancelUrl)
         default:
