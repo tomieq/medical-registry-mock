@@ -197,8 +197,10 @@ class EditProjectAPI: BaseAPI {
             }
             if let parentGroup = activeGroup {
                 parentGroup.groups.append(group)
+                group.sequence = parentGroup.groups.count
             } else {
                 project.groups.append(group)
+                group.sequence = project.groups.count
             }
             let activeGroupID = activeGroup?.id ?? ""
             
@@ -460,7 +462,8 @@ class EditProjectAPI: BaseAPI {
     private func groupList(project: Project, group: ProjectGroup?) -> String {
 
         let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditGroupList.tpl"))
-        for group in group?.groups ?? project.groups {
+        let groups = group?.groups ?? project.groups
+        for group in groups.sorted() {
             var data: [String:String] = [:]
             data["projectID"] = project.id
             data["name"] = group.name
@@ -476,7 +479,7 @@ class EditProjectAPI: BaseAPI {
     
     private func treeMenu(project: Project, activeGroup: ProjectGroup?) -> String {
         let template = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditTree.tpl"))
-        for group in project.groups {
+        for group in project.groups.sorted() {
             self.addGroupToTreeMenu(template, project, group: group, activeGroup: activeGroup)
         }
         var templateVariables: [String:String] = [:]
@@ -492,7 +495,7 @@ class EditProjectAPI: BaseAPI {
         let uiTreeItem = UITreeItem(project: project, group: group, nestLevel: level, isActive: group.id == activeGroup?.id, hasChildren: !group.groups.isEmpty)
         template.assign(variables: uiTreeItem.getTemplateVariables(), inNest: "treeGroup")
         let level = level + 1
-        group.groups.forEach{ self.addGroupToTreeMenu(template, project, group: $0, activeGroup: activeGroup, level: level) }
+        group.groups.sorted().forEach{ self.addGroupToTreeMenu(template, project, group: $0, activeGroup: activeGroup, level: level) }
     }
     
     

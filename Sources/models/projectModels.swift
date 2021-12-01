@@ -62,6 +62,7 @@ class ProjectGroup {
     var groups: [ProjectGroup] = []
     var questions: [ProjectQuestion] = []
     var canBeCopied = false
+    var sequence = 0
     
     func findGroup(id: String) -> ProjectGroup? {
         self.groups.first{ $0.id == id } ?? self.groups.compactMap{ $0.findGroup(id: id) }.first
@@ -81,6 +82,16 @@ class ProjectGroup {
     func removeGroup(id: String) {
         self.groups = self.groups.filter { $0.id != id }
         self.groups.forEach{ $0.removeGroup(id: id) }
+    }
+}
+
+extension ProjectGroup: Comparable {
+    static func < (lhs: ProjectGroup, rhs: ProjectGroup) -> Bool {
+        lhs.sequence < rhs.sequence
+    }
+    
+    static func == (lhs: ProjectGroup, rhs: ProjectGroup) -> Bool {
+        lhs.id == rhs.id
     }
 }
 
