@@ -12,10 +12,12 @@ class Form {
     var html: String
     let method: String
     let url: String
+    let ajax: Bool
     
-    init(url: String, method: String) {
+    init(url: String, method: String, ajax: Bool = false) {
         self.method = method
         self.url = url
+        self.ajax = ajax
         self.template = Template(raw: Resource.getAppResource(relativePath: "templates/form.tpl"))
         self.html = ""
     }
@@ -144,6 +146,9 @@ class Form {
         variables["html"] = self.html
         variables["method"] = self.method
         variables["url"] = self.url
+        if self.ajax {
+            variables["attributes"] = "onsubmit=\"event.preventDefault();  formSubmit('\(url)', this);\""
+        }
         self.template.assign(variables: variables, inNest: "form")
         return self.template.output()
     }

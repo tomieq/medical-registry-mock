@@ -1,5 +1,5 @@
 [START form]
-<form method="{method}" action="{url}">
+<form method="{method}" action="{url}" {attributes}>
 {html}
 </form>
 [END form]
