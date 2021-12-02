@@ -566,10 +566,11 @@ class EditProjectAPI: BaseAPI {
     
     
     private func dictionaryPreview(project: Project, dictionary: ProjectDictionary) -> String {
-        var html = Template.htmlNode(type: "h4", content: dictionary.name)
+        var html = ""
         for option in dictionary.options {
-            html.append(Template.htmlNode(type: "p", content: option.title))
+            html.append(Template.htmlNode(type: "li", content: option.title))
         }
+        html.append("<br>")
         let cancelJS = JSCode.closeLayer.js
         html.append(Template.htmlNode(type: "span", attributes: ["onclick": cancelJS, "class":"btn btn-purple hand"], content: "Zamknij"))
         return html
