@@ -146,9 +146,7 @@ class EditProjectAPI: BaseAPI {
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
             }
-            if let groupToRemove = project.findGroup(id: groupID) {
-                project.removeGroup(id: groupID)
-            }
+            project.removeGroup(id: groupID)
             
             let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
             let js = JSResponse()
@@ -275,6 +273,40 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
+        
+        // MARK: /confirmQuestionRemoval
+        server.GET["/confirmQuestionRemoval"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let questionID = request.queryParam("questionID") else { return .badRequest(nil) }
+            guard let question = (self.dataStore.projects.first{ $0.id == projectID }?.findQuestion(id: questionID)) else { return .badRequest(nil) }
+            let name = question.label ?? "Bez nazwy"
+
+            var html = "Czy na pewno chcesz usunąć parametr <b>\(name)</b>?<br><br>"
+            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: "/deleteQuestion?projectID=\(projectID)&questionID=\(questionID)").js)\" class='btn btn-purple'>Potwierdzam</a> ")
+            html.append("<a href='#' onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative'>Anuluj</a>")
+            return self.wrapAsLayer(width: 500, title: "Usuwanie parametru", content: html).asResponse
+        }
+        
+        // MARK: /deleteQuestion
+        server.GET["/deleteQuestion"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let questionID = request.queryParam("questionID") else { return .notFound }
+            
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            let parentGroup = project.parentGroup(id: questionID)
+            parentGroup?.removeQuestion(id: questionID)
+
+            let parentGroupID = parentGroup?.id ?? ""
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadCardsMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
+            return js.response
+        }
+
         // MARK: /dictionaryList
         server.GET["/dictionaryList"]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
@@ -503,7 +535,7 @@ class EditProjectAPI: BaseAPI {
                 data["unit"] = Template.htmlNode(type: "span", attributes: ["class":"label label-green"], content: unit)
             }
             data["questionID"] = question.id
-            data["deleteURL"] = "\(url)&groupID=\(group.id)&questionID=\(question.id)&action=deleteQuestion"
+            data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmQuestionRemoval?questionID=\(question.id)&projectID=\(project.id)").js
             data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"
             
             switch question.dataType {
@@ -526,7 +558,7 @@ class EditProjectAPI: BaseAPI {
         for group in groups.sorted() {
             var data: [String:String] = [:]
             data["projectID"] = project.id
-            data["name"] = group.name
+            data["name"] = group.name + " \(group.sequence)"
             data["groupID"] = group.id
             data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js
             data["onclickRename"] = JSCode.loadAsLayer(url: "/renameGroup?groupID=\(group.id)&projectID=\(project.id)").js

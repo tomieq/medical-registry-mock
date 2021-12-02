@@ -59,6 +59,9 @@ class Project {
         }
         self.groups.forEach{ $0.removeGroup(id: id) }
     }
+    func findQuestion(id: String) -> ProjectQuestion? {
+        return self.groups.compactMap{ $0.findQuestion(id: id) }.first
+    }
 }
 
 class ProjectGroup {
@@ -74,14 +77,10 @@ class ProjectGroup {
     }
     
     func parentGroup(id: String) -> ProjectGroup? {
-        if (self.groups.contains{ $0.id == id }) {
+        if (self.groups.contains{ $0.id == id } || self.questions.contains{ $0.id == id } ) {
             return self
         }
         return self.groups.compactMap{ $0.parentGroup(id: id) }.first
-    }
-
-    func findQuestion(id: String) -> ProjectQuestion? {
-        self.questions.first { $0.id == id }
     }
     
     func removeGroup(id: String) {
@@ -92,6 +91,19 @@ class ProjectGroup {
             return
         }
         self.groups.forEach{ $0.removeGroup(id: id) }
+    }
+
+    func findQuestion(id: String) -> ProjectQuestion? {
+        self.questions.first { $0.id == id } ?? self.groups.compactMap{ $0.findQuestion(id: id) }.first
+    }
+    
+    func removeQuestion(id: String) {
+        if let questionToRemove = (self.questions.first{$0.id == id}) {
+            let sequence = questionToRemove.sequence
+            self.questions.filter{ $0.sequence > sequence }.forEach{ $0.sequence -= 1 }
+            self.questions.removeAll{$0.id == id}
+            return
+        }
     }
 }
 
@@ -161,6 +173,17 @@ class ProjectQuestion {
     var maxValue: Int?
     var dictionaryID: String?
     var unit: String?
+    var sequence = 0
+}
+
+extension ProjectQuestion: Comparable {
+    static func < (lhs: ProjectQuestion, rhs: ProjectQuestion) -> Bool {
+        lhs.sequence < rhs.sequence
+    }
+    
+    static func == (lhs: ProjectQuestion, rhs: ProjectQuestion) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 class DataEntry: Equatable {
