@@ -45,15 +45,8 @@ class EditProjectAPI: BaseAPI {
             
             if let action = request.queryParam("action") {
                 switch action {
-                case "deleteQuestion":
-                    activeGroup?.questions = activeGroup?.questions.filter{ $0.id != request.queryParam("questionID") } ?? []
                 case "addParameter":
                     if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, page: page) {
-                        return response
-                    }
-
-                case "dictionaryList":
-                    if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
                         return response
                     }
                 default:
@@ -267,12 +260,10 @@ class EditProjectAPI: BaseAPI {
             let parentGroupID = parentGroup?.id ?? ""
 
             let js = JSResponse()
-            js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
             js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
-        
         
         // MARK: /confirmQuestionRemoval
         server.GET["/confirmQuestionRemoval"]  = { request, responseHeaders in
@@ -303,6 +294,42 @@ class EditProjectAPI: BaseAPI {
             js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
             js.add(.editorLoadCardsMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
+            return js.response
+        }
+        
+        // MARK: /moveQuestion
+        server.GET["/moveQuestion"] = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let questionID = request.queryParam("questionID") else { return .notFound }
+            guard let direction = request.queryParam("direction") else { return .notFound }
+            
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            guard let question = project.findQuestion(id: questionID) else {
+                return .notFound
+            }
+            let parentGroup = project.parentGroup(id: questionID)
+            let questions = parentGroup?.questions.sorted() ?? []
+            if let index = questions.firstIndex(of: question) {
+                if direction == "up" {
+                    if question.sequence > 1 {
+                        question.sequence -= 1
+                        questions[safeIndex: index - 1]?.sequence += 1
+                    }
+                } else {
+                    if question.sequence < questions.count {
+                        question.sequence += 1
+                        questions[safeIndex: index + 1]?.sequence -= 1
+                    }
+                }
+            }
+            
+            let parentGroupID = parentGroup?.id ?? ""
+
+            let js = JSResponse()
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
             js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
@@ -415,8 +442,9 @@ class EditProjectAPI: BaseAPI {
             question.dictionaryID = formData["dictionaryID"]
             question.unit = formData["unit"]
             
-            if question.label?.isEmpty ?? true { question.label = "Brak nazwy" }
+            if question.label.isEmpty { question.label = "Brak nazwy" }
             group.questions.append(question)
+            question.sequence = group.questions.count
             return .movedPermanently(cancelUrl)
         default:
             break
@@ -524,9 +552,9 @@ class EditProjectAPI: BaseAPI {
     }
     
     private func parameterList(project: Project, group: ProjectGroup) -> String {
-        let url = "/editProject?projectID=\(project.id)"
+
         let table = Template(raw: Resource.getAppResource(relativePath: "templates/projectEditQuestionList.tpl"))
-        for question in group.questions {
+        for question in group.questions.sorted() {
             var data: [String:String] = [:]
             data["name"] = question.label
             data["createDate"] = question.createDate.getFormattedDate(format: "yyyy-MM-dd")
@@ -536,7 +564,9 @@ class EditProjectAPI: BaseAPI {
             }
             data["questionID"] = question.id
             data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmQuestionRemoval?questionID=\(question.id)&projectID=\(project.id)").js
-            data["editURL"] = "\(url)&groupID=\(group.id)&action=editQuestion"
+            data["moveUpClick"] = JSCode.loadScript(url: "/moveQuestion?questionID=\(question.id)&projectID=\(project.id)&direction=up").js
+            data["moveDownClick"] = JSCode.loadScript(url: "/moveQuestion?questionID=\(question.id)&projectID=\(project.id)&direction=down").js
+
             
             switch question.dataType {
             case .number:
@@ -558,7 +588,7 @@ class EditProjectAPI: BaseAPI {
         for group in groups.sorted() {
             var data: [String:String] = [:]
             data["projectID"] = project.id
-            data["name"] = group.name + " \(group.sequence)"
+            data["name"] = group.name
             data["groupID"] = group.id
             data["openGroupJS"] = JSCode.editorLoadGroup(projectID: project.id, groupID: group.id).js
             data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js

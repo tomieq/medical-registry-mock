@@ -2,10 +2,10 @@
         <table class="table table-sm table-striped" id="groupList">
           <thead>
             <tr>
-              <th scope="col">GRUPY PYTAŃ</th>
-              <th scope="col">CZY GRUPĘ MOŻNA KOPIOWAĆ</th>
+              <th scope="col">Grupy</th>
+              <th scope="col">Czy grupę można kopiować</th>
               <th scope="col">Kolejność</th>
-              <th scope="col">ACTIONS</th>
+              <th scope="col">Akcje</th>
             </tr>
           </thead>
           <tbody>

@@ -66,7 +66,7 @@ class Project {
 
 class ProjectGroup {
     let id: String = UUID().uuidString
-    var name: String = ""
+    var name: String = "Bez nazwy"
     var groups: [ProjectGroup] = []
     var questions: [ProjectQuestion] = []
     var canBeCopied = false
@@ -145,7 +145,7 @@ enum ProjectQuestionType: String, CaseIterable {
 class ProjectDictionary: Equatable {
     
     let id: String = UUID().uuidString
-    var name: String = ""
+    var name: String = "Bez nazwy"
     var options: [ProjectDictionaryOption] = []
     
     static func == (lhs: ProjectDictionary, rhs: ProjectDictionary) -> Bool {
@@ -166,7 +166,7 @@ class ProjectDictionaryOption: Equatable {
 class ProjectQuestion {
     let id: String = UUID().uuidString
     let createDate = Date()
-    var label: String?
+    var label: String = "Bez nazwy"
     var dataType: ProjectQuestionType = .unknown
     var visibleOnList: Bool = false
     var minValue: Int?
