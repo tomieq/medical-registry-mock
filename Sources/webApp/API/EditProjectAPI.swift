@@ -45,8 +45,9 @@ class EditProjectAPI: BaseAPI {
             
             if let action = request.queryParam("action") {
                 switch action {
-                case "addParameter":
-                    if let response = self.addParameter(request: request, activeGroup: activeGroup, url: url, project: project, page: page) {
+                    
+                case "dictionaryList":
+                    if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
                         return response
                     }
                 default:
@@ -561,6 +562,7 @@ class EditProjectAPI: BaseAPI {
         var cardGroup: [String:String] = [:]
         cardGroup["title"] = "Dodaj grupę/podgrupę"
         cardGroup["desc"] = "Dodaj nową grupę w danej kategorii pytań"
+        cardGroup["href"] = "#"
         
         if activeGroup?.questions.isEmpty ?? true {
             cardGroup["onclick"] = JSCode.loadAsLayer(url: "/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(project.id)").js
@@ -572,6 +574,7 @@ class EditProjectAPI: BaseAPI {
         var cardParameter: [String:String] = [:]
         cardParameter["title"] = "Dodaj parametr"
         cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
+        cardParameter["href"] = "#"
         if let group = activeGroup, group.groups.isEmpty {
             cardParameter["onclick"] = JSCode.loadAsLayer(url: "/addQuestionStep1?groupID=\(group.id)&projectID=\(project.id)").js
         } else {
@@ -582,6 +585,7 @@ class EditProjectAPI: BaseAPI {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
+        cardDictionary["href"] = "#"
         cardDictionary["onclick"] = JSCode.editorLoadDictionaryList(projectID: project.id).js
         cardView.assign(variables: cardDictionary, inNest: "card")
         
