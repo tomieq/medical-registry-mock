@@ -42,18 +42,6 @@ class EditProjectAPI: BaseAPI {
             
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
 
-            
-            if let action = request.queryParam("action") {
-                switch action {
-                    
-                case "dictionaryList":
-                    if let response = self.addDictionary(request: request, page: page, url: url, project: project) {
-                        return response
-                    }
-                default:
-                    break
-                }
-            }
             if let group = activeGroup, group.questions.count > 0 {
                 page.assign("table", self.parameterList(project: project, group: group))
             } else {
@@ -472,7 +460,7 @@ class EditProjectAPI: BaseAPI {
             }
     
             let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
-            list.assign("projectID", projectID)
+            list.assign("createDictionaryJS", JSCode.loadAsLayer(url: "/addDictionary?projectID=\(projectID)").js)
             for dictionary in project.dictionaries {
                 var data: [String:String] = [:]
                 data["name"] = dictionary.name
@@ -484,6 +472,7 @@ class EditProjectAPI: BaseAPI {
             return list.asResponse()
         }
         
+        // MARK: /dictionaryPreview
         server.GET["/dictionaryPreview"]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
@@ -494,66 +483,76 @@ class EditProjectAPI: BaseAPI {
             
             return self.wrapAsLayer(width: 600, title: dictionary.name, content: self.dictionaryPreview(project: project, dictionary: dictionary)).asResponse
         }
-    }
-    
-    private func addDictionary(request: HttpRequest, page: Template, url: String, project: Project) -> HttpResponse? {
-        guard request.queryParam("form") != nil else { return nil }
         
-        enum Step {
-            case showForm
-            case moreInputs
-            case createDictionary
-        }
-        
-        let formData = request.flatFormData()
-        
-        let editUrl = "\(url)&action=dictionaryList&form=new"
-        let cancelUrl = "\(url)&action=dictionaryList"
-        
-        var answerAmount = Int(formData["inputs"] ?? "2") ?? 2
-        var step: Step = .showForm
+        //MARK: /addDictionary
+        server.GET["/addDictionary"]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .notFound }
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+                
+            let form = Form(url: "/addDictionary", method: "POST", ajax: true)
+                .addInputText(name: "name", label: "", labelCSSClass: "text-gray font-20")
+                .addHidden(name: "projectID", value: project.id)
+                .addSeparator(txt: "Podaj wartości, jakie użytkownik będzie miał do wyboru")
+            
+            for _ in (1...2) {
+                form.addInputText(name: "option[]", label: "", value: "")
+            }
+            form.addRaw(html: "<div id='moreOptions'></div>")
+            
+            var attributes: [String:String] = [:]
+            attributes["class"] = "btn btn-purple"
+            attributes["onclick"] = "$('<div>').load('/addDictionaryOption', function() { $('#moreOptions').append($(this).html());});"
+            form.addRaw(html: Template.htmlNode(type: "span", attributes: attributes, content: "+ Dodaj kolejną wartość wyboru"))
+                .addRaw(html: "<hr>")
+                .addSubmit(name: "submit", label: "Dodaj")
+                .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</a>")
 
-        if formData["addInput"] != nil {
-            step = .moreInputs
-            answerAmount += 1
+            return self.wrapAsLayer(width: 600, title: "Dodaj nowy słownik", content: form.output()).asResponse
         }
-        if formData["submit"] != nil {
-            step = .createDictionary
+
+        //MARK: /addDictionaryOption
+        server.GET["/addDictionaryOption"]  = { request, responseHeaders in
+            let template = Template(raw: Resource.getAppResource(relativePath: "templates/form.tpl"))
+            
+            var variables: [String:String] = [:]
+            variables["name"] = "option[]"
+            template.assign(variables: variables, inNest: "text")
+            return template.asResponse()
         }
-        
-        switch step {
-        case .createDictionary:
+
+        //MARK: /addDictionary
+        server.POST["/addDictionary"]  = { request, responseHeaders in
+            let formData = request.flatFormData()
+            guard let projectID = formData["projectID"] else { return .notFound }
+            guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
+                return .notFound
+            }
+            
+            let urlencodedForm = request.parseUrlencodedForm()
+            let options = urlencodedForm.filter{$0.0 == "option[]"}.map{$0.1}
+
             let dictionary = ProjectDictionary()
             dictionary.name = formData["name"] ?? "Bez nazwy"
-            for n in (1...answerAmount) {
-                if let name = formData["option\(n)"] {
+            if dictionary.name.isEmpty { dictionary.name = "Bez nazwy" }
+            for name in options {
+                if !name.isEmpty {
                     let option = ProjectDictionaryOption()
                     option.title = name
                     dictionary.options.append(option)
                 }
             }
-            project.dictionaries.append(dictionary)
-            break
-        default:
-            
-            let form = Form(url: editUrl, method: "POST")
-                .addInputText(name: "name", label: "Nazwa słownika", value: formData["name"] ?? "", labelCSSClass: "text-gray font-20")
-                .addHidden(name: "projectID", value: project.id)
-                .addHidden(name: "inputs", value: "\(answerAmount)")
-                .addSeparator(txt: "Podaj wartości, jakie użytkownik będzie miał do wyboru")
-            
-            for n in (1...answerAmount) {
-                form.addInputText(name: "option\(n)", label: "", value: formData["option\(n)"] ?? "")
+            if !dictionary.options.isEmpty {
+                project.dictionaries.append(dictionary)
             }
             
-            form.addSubmit(name: "addInput", label: "+ Dodaj kolejną wartość wyboru")
-                .addRaw(html: "<hr>")
-                .addSubmit(name: "submit", label: "Dodaj")
-                .addRaw(html: "<a href='\(cancelUrl)' class='btn btn-purple-negative'>Anuluj</a>")
-            page.assign(variables: ["form":form.output(), "title":"Dodaj słownik"], inNest: "wideForm")
+            
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.editorLoadDictionaryList(projectID: projectID))
+            return js.response
         }
-        
-        return nil
     }
     
     private func cardsMenu(project: Project, activeGroup: ProjectGroup?) -> String {
