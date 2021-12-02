@@ -311,7 +311,7 @@ class EditProjectAPI: BaseAPI {
             guard let questionType = ProjectQuestionType(rawValue: request.queryParam("type") ?? "") else {
                 return .notFound
             }
-            let label = request.queryParam("label") ?? "Brak nazwy"
+            let label = request.queryParam("label")?.removingPercentEncoding ?? "Brak nazwy"
             
             var html = ""
             let url = "/addQuestionStep2"
@@ -392,6 +392,7 @@ class EditProjectAPI: BaseAPI {
             
             let js = JSResponse()
             js.add(.closeLayer)
+            js.add(.editorLoadCardsMenu(projectID: projectID, groupID: groupID))
             js.add(.editorLoadGroupTable(projectID: projectID, groupID: groupID))
             return js.response
         }

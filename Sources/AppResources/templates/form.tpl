@@ -1,5 +1,5 @@
 [START form]
-<form method="{method}" action="{url}" {attributes}>
+<form method="{method}" action="{url}" {attributes} accept-charset='utf-8'>
 {html}
 </form>
 [END form]
