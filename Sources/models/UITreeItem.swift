@@ -16,7 +16,7 @@ struct UITreeItem {
     
     func getTemplateVariables() -> [String:String] {
         var data: [String:String] = [:]
-        data["onclick"] = JSCode.changeGroupContext(projectID: project.id, groupID: group.id).js
+        data["onclick"] = JSCode.editorLoadGroup(projectID: project.id, groupID: group.id).js
         data["name"] = self.group.name
         data["css"] = self.isActive ? "treeItemActive" : "treeItemInactive"
         data["margin"] = "\(self.nestLevel * 20)"

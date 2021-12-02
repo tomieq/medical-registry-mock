@@ -155,9 +155,9 @@ class EditProjectAPI: BaseAPI {
             let parentGroupID = parentGroup?.id ?? ""
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.loadEditProjectCardsMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadCardsMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
@@ -201,9 +201,9 @@ class EditProjectAPI: BaseAPI {
             
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: activeGroupID))
-            js.add(.loadEditProjectCardsMenu(projectID: project.id, groupID: activeGroupID))
-            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: activeGroupID))
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: activeGroupID))
+            js.add(.editorLoadCardsMenu(projectID: project.id, groupID: activeGroupID))
+            js.add(.editorLoadGroupList(projectID: project.id, groupID: activeGroupID))
             return js.response
         }
         
@@ -237,8 +237,8 @@ class EditProjectAPI: BaseAPI {
             let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
@@ -274,8 +274,8 @@ class EditProjectAPI: BaseAPI {
 
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.loadEditProjectTreeMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.loadEditProjectGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
@@ -488,7 +488,7 @@ class EditProjectAPI: BaseAPI {
         var cardDictionary: [String:String] = [:]
         cardDictionary["title"] = "Edytuj słowniki"
         cardDictionary["desc"] = "Stwórz słowniki, w których możesz zdefiniować specyficzne odpowiedzi na pytania"
-        cardDictionary["onclick"] = JSCode.loadEditProjectDictionaryList(projectID: project.id).js
+        cardDictionary["onclick"] = JSCode.editorLoadDictionaryList(projectID: project.id).js
         cardDictionary["href"] = "#"
         cardView.assign(variables: cardDictionary, inNest: "card")
         
@@ -550,7 +550,7 @@ class EditProjectAPI: BaseAPI {
         }
         var templateVariables: [String:String] = [:]
         templateVariables["css"] = activeGroup == nil ? "treeItemActive" : "treeItemInactive"
-        templateVariables["onclick"] = JSCode.changeGroupContext(projectID: project.id, groupID: "").js
+        templateVariables["onclick"] = JSCode.editorLoadGroup(projectID: project.id, groupID: "").js
         templateVariables["projectName"] = project.name
         template.assign(variables: templateVariables)
         return template.output()
