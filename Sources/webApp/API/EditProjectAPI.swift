@@ -560,6 +560,7 @@ class EditProjectAPI: BaseAPI {
             data["projectID"] = project.id
             data["name"] = group.name + " \(group.sequence)"
             data["groupID"] = group.id
+            data["openGroupJS"] = JSCode.editorLoadGroup(projectID: project.id, groupID: group.id).js
             data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js
             data["onclickRename"] = JSCode.loadAsLayer(url: "/renameGroup?groupID=\(group.id)&projectID=\(project.id)").js
             data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"

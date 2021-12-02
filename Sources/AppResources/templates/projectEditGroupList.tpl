@@ -11,7 +11,9 @@
           <tbody>
             [START group]
             <tr>
-              <td><i data-feather="folder" class="text-light-gray mx-2" style="height: 16px;"></i> <a href="/editProject?projectID={projectID}" class="text-gray">{name}</a></td>
+              <td><i data-feather="folder" class="text-light-gray mx-2" style="height: 16px;"></i>
+                <a href="#" onclick="{openGroupJS}" class="text-gray">{name}</a>
+              </td>
               <td><input type="checkbox" class="hand" data-url="{toggleCopyUrl}" onchange="checkboxChanged(this);" {checked} /></td>
               <td>
                 <span class="hand" onclick="{moveUpClick}"><i data-feather="arrow-up" class="mx-2" style="height: 16px;"></i></span>
