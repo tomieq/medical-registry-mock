@@ -27,7 +27,7 @@ enum JSCode {
     case closeLayer
     case editorLoadGroup(projectID: String, groupID: String)
     case editorLoadTreeMenu(projectID: String, groupID: String)
-    case editorLoadGroupList(projectID: String, groupID: String)
+    case editorLoadGroupTable(projectID: String, groupID: String)
     case editorLoadCardsMenu(projectID: String, groupID: String)
     case editorLoadDictionaryList(projectID: String)
 }
@@ -44,13 +44,13 @@ extension JSCode {
         case .editorLoadGroup(let projectID, let groupID):
             return [
                 JSCode.editorLoadTreeMenu(projectID: projectID, groupID: groupID),
-                JSCode.editorLoadGroupList(projectID: projectID, groupID: groupID),
+                JSCode.editorLoadGroupTable(projectID: projectID, groupID: groupID),
                 JSCode.editorLoadCardsMenu(projectID: projectID, groupID: groupID)
             ].map{$0.js}.joined(separator: "")
         case .editorLoadTreeMenu(let projectID, let groupID):
             return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID)');";
-        case .editorLoadGroupList(let projectID, let groupID):
-            return "$('#contentTable').load('/groupList?projectID=\(projectID)&groupID=\(groupID)');";
+        case .editorLoadGroupTable(let projectID, let groupID):
+            return "$('#contentTable').load('/editorTable?projectID=\(projectID)&groupID=\(groupID)');";
         case .editorLoadCardsMenu(let projectID, let groupID):
             return "$('#cards').load('/editCardsMenu?projectID=\(projectID)&groupID=\(groupID)');";
         case .editorLoadDictionaryList(let projectID):

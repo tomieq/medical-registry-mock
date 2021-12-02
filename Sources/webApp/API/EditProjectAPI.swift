@@ -102,16 +102,18 @@ class EditProjectAPI: BaseAPI {
             return self.cardsMenu(project: project, activeGroup: activeGroup).asResponse
         }
 
-        // MARK: /groupList
-        server.GET["/groupList"] = { request, responseHeaders in
+        // MARK: /editorTable
+        server.GET["/editorTable"] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
-            var activeGroup: ProjectGroup?
-            if let groupID = request.queryParam("groupID") {
-                activeGroup = project.findGroup(id: groupID)
+            guard let groupID = request.queryParam("groupID"), let group = project.findGroup(id: groupID) else {
+                return self.groupList(project: project, group: nil).asResponse
             }
-            return self.groupList(project: project, group: activeGroup).asResponse
+            if group.questions.isEmpty {
+                return self.groupList(project: project, group: group).asResponse
+            }
+            return self.parameterList(project: project, group: group).asResponse
         }
     
         // MARK: /toggleGroupCanBeCopied
@@ -157,7 +159,7 @@ class EditProjectAPI: BaseAPI {
             js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
             js.add(.editorLoadCardsMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
@@ -201,9 +203,7 @@ class EditProjectAPI: BaseAPI {
             
             let js = JSResponse()
             js.add(.closeLayer)
-            js.add(.editorLoadTreeMenu(projectID: project.id, groupID: activeGroupID))
-            js.add(.editorLoadCardsMenu(projectID: project.id, groupID: activeGroupID))
-            js.add(.editorLoadGroupList(projectID: project.id, groupID: activeGroupID))
+            js.add(.editorLoadGroup(projectID: project.id, groupID: activeGroupID))
             return js.response
         }
         
@@ -238,7 +238,7 @@ class EditProjectAPI: BaseAPI {
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
@@ -275,7 +275,7 @@ class EditProjectAPI: BaseAPI {
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
-            js.add(.editorLoadGroupList(projectID: project.id, groupID: parentGroupID))
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
             return js.response
         }
         
