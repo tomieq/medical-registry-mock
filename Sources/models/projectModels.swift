@@ -51,7 +51,12 @@ class Project {
     }
     
     func removeGroup(id: String) {
-        self.groups = self.groups.filter { $0.id != id }
+        if let groupToRemove = (self.groups.first{$0.id == id}) {
+            let sequence = groupToRemove.sequence
+            self.groups.filter{ $0.sequence > sequence }.forEach{ $0.sequence -= 1 }
+            self.groups.removeAll{$0.id == id}
+            return
+        }
         self.groups.forEach{ $0.removeGroup(id: id) }
     }
 }
@@ -80,7 +85,12 @@ class ProjectGroup {
     }
     
     func removeGroup(id: String) {
-        self.groups = self.groups.filter { $0.id != id }
+        if let groupToRemove = (self.groups.first{$0.id == id}) {
+            let sequence = groupToRemove.sequence
+            self.groups.filter{ $0.sequence > sequence }.forEach{ $0.sequence -= 1 }
+            self.groups.removeAll{$0.id == id}
+            return
+        }
         self.groups.forEach{ $0.removeGroup(id: id) }
     }
 }

@@ -146,15 +146,11 @@ class EditProjectAPI: BaseAPI {
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
             }
-            let parentGroup = project.parentGroup(id: groupID)
-            let groups = (parentGroup?.groups ?? project.groups).sorted()
             if let groupToRemove = project.findGroup(id: groupID) {
-                let sequence = groupToRemove.sequence
-                groups.filter{ $0.sequence > sequence }.forEach{ $0.sequence -= 1 }
                 project.removeGroup(id: groupID)
             }
             
-            let parentGroupID = parentGroup?.id ?? ""
+            let parentGroupID = project.parentGroup(id: groupID)?.id ?? ""
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.editorLoadTreeMenu(projectID: project.id, groupID: parentGroupID))
