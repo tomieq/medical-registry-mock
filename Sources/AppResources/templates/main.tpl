@@ -29,7 +29,7 @@
 
 </head>
 
-<body>
+<body id="body">
   <div class="full">
   <header class="mb-1 text-purple">
     <div class="gray-shadow">
@@ -49,7 +49,9 @@
     {inline_notice_info}
     <div id="loader">Ładowanie danych...</div>
     <div id="layerContainer"></div>
+    <div id="page">
     {page}
+    </div>
 
   <footer>
     <div class="mb-2">
