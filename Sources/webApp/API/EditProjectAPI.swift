@@ -353,7 +353,7 @@ class EditProjectAPI: BaseAPI {
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
                 html = form.output()
-            case .dictionary:
+            case .singleSelectDictionary, .multiSelectDictionary:
                 let form = Form(url: url, method: "POST", ajax: true)
                     .addHidden(name: "label", value: label)
                     .addHidden(name: "type", value: questionType.rawValue)
@@ -634,7 +634,7 @@ class EditProjectAPI: BaseAPI {
             switch question.dataType {
             case .number:
                 data["type"]?.append(" (\(question.minValue.toOptionalString() ?? "-∞") do \(question.maxValue.toOptionalString() ?? "+∞"))")
-            case .dictionary:
+            case .singleSelectDictionary, .multiSelectDictionary:
                 break
             default:
                 break
