@@ -22,10 +22,10 @@
               </td>
               <td>
                 <div class="dropdown">
-                  <button class="btn text-light-gray" type="button" id="dropdownMenuButton{questionID}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <button class="btn text-light-gray" type="button" id="q{questionID}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i data-feather="more-vertical" class="mx-2" style="height: 16px;"></i>
                   </button>
-                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{questionID}">
+                  <div class="dropdown-menu" aria-labelledby="q{questionID}">
                     <a class="dropdown-item font-14 text-light-gray "href="#" onclick="{onclickDelete}">Usuń</a>
                   </div>
                 </div>
