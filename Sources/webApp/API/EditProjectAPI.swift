@@ -10,6 +10,18 @@ import Swifter
 
 class EditProjectAPI: BaseAPI {
     
+    enum EditorUrl: String, CustomStringConvertible {
+        case editor
+
+        var description: String {
+            return self.rawValue
+        }
+        
+        var url: String {
+            return self.description
+        }
+    }
+    
     private let dataStore: DataStore
     
     required init(_ server: HttpServer, dataStore: DataStore) {
@@ -17,7 +29,7 @@ class EditProjectAPI: BaseAPI {
 
         
         // MARK: /editProject
-        server["/editProject"] = { request, responseHeaders in
+        server[EditorUrl.editor.url] = { request, responseHeaders in
             
             guard let project = (self.dataStore.projects.first{ $0.id == request.queryParam("projectID") }) else {
                 return .notFound
@@ -27,8 +39,7 @@ class EditProjectAPI: BaseAPI {
             if let groupID = request.queryParam("groupID") {
                 activeGroup = project.findGroup(id: groupID)
             }
-            
-            let url = "/editProject?projectID=\(project.id)"
+
             let template = self.getMainTemplate(request)
             let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
             let avatarUrl = "https://www.gravatar.com/avatar/5ede5914f659676c0295d5282c1c9df9"

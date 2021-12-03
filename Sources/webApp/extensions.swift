@@ -35,12 +35,6 @@ extension Optional {
     }
 }
 
-extension String {
-    func toInt() -> Int? {
-        return Int(self)
-    }
-}
-
 extension Array where Element: Equatable {
     
     // Remove first collection element that is equal to the given `object`:

@@ -15,7 +15,7 @@
           <tbody>
             [START project]
             <tr>
-              <td><a href="/editProject?projectID={projectID}" class="text-gray">{name}</a></td>
+              <td><a href="#" onclick="{onclick}" class="text-gray">{name}</a></td>
               <td><span class="label label-purple">{status}</span></td>
               <td>
                 John Doe

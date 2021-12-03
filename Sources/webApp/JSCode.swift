@@ -22,6 +22,7 @@ class JSResponse {
 }
 
 enum JSCode {
+    case loadBody(url: String)
     case loadScript(url: String)
     case loadAsLayer(url: String)
     case closeLayer
@@ -35,6 +36,8 @@ enum JSCode {
 extension JSCode {
     var js: String {
         switch self {
+        case .loadBody(let url):
+            return "$('body').load('\(url)');"
         case .loadScript(let url):
             return "$.getScript('\(url)');"
         case .loadAsLayer(let url):
