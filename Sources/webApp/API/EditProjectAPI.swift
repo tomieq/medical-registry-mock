@@ -30,8 +30,17 @@ enum EditorUrl: String, CaseIterable {
     case editorAddDictionaryOption
     
     var url: String {
-        return "/\(self.rawValue)"
+        return "/e\(EditorUrl.map[self] ?? self.rawValue)"
+        //return "/\(self.rawValue)"
     }
+    
+    private static var map: [EditorUrl:String] = {
+        var map: [EditorUrl:String] = [:]
+        EditorUrl.allCases.forEach {
+            map[$0] = String((0..<12).map{ _ in "abcdefghijklmnopqrstuvwxyz0123456789".randomElement()! })
+        }
+        return map
+    }()
 }
 
 class EditProjectAPI: BaseAPI {
