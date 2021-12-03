@@ -54,13 +54,13 @@ extension JSCode {
                 JSCode.editorLoadCardsMenu(projectID: projectID, groupID: groupID)
             ].map{$0.js}.joined(separator: "")
         case .editorLoadTreeMenu(let projectID, let groupID):
-            return "$('#tree').load('/editTreeMenu?projectID=\(projectID)&groupID=\(groupID)');";
+            return "$('#tree').load('\(EditorUrl.editorTreeMenu.url.append("projectID", projectID).append("groupID", groupID))');";
         case .editorLoadGroupTable(let projectID, let groupID):
-            return "$('#contentTable').load('/editorTable?projectID=\(projectID)&groupID=\(groupID)');";
+            return "$('#contentTable').load('\(EditorUrl.editorTable.url.append("projectID", projectID).append("groupID", groupID))');";
         case .editorLoadCardsMenu(let projectID, let groupID):
-            return "$('#cards').load('/editCardsMenu?projectID=\(projectID)&groupID=\(groupID)');";
+            return "$('#cards').load('\(EditorUrl.editorCardsMenu.url.append("projectID", projectID).append("groupID", groupID))');";
         case .editorLoadDictionaryList(let projectID):
-            return "$('#contentTable').load('/dictionaryList?projectID=\(projectID)');";
+            return "$('#contentTable').load('\(EditorUrl.editorDictionaryList.url.append("projectID", projectID))');";
         }
     }
 }

@@ -8,19 +8,35 @@
 import Foundation
 import Swifter
 
+enum EditorUrl: String, CaseIterable {
+    case editor
+    case editorTreeMenu
+    case editorCardsMenu
+    case editorTable
+    case editorGroupCopyableToggle
+    case editorConfirmGroupRemoval
+    case editorDeleteGroup
+    case editorAddGroup
+    case editorRenameGroup
+    case editorMoveGroup
+    case editorConfirmQuestionRemoval
+    case editorAddQuestionStep1
+    case editorAddQuestionStep2
+    case editorDeleteQuestion
+    case editorMoveQuestion
+    case editorDictionaryList
+    case editorDictionaryPreview
+    case editorAddDictionary
+    case editorAddDictionaryOption
+    
+    var url: String {
+        return "/\(self.rawValue)"
+    }
+}
+
 class EditProjectAPI: BaseAPI {
     
-    enum EditorUrl: String, CustomStringConvertible {
-        case editor
 
-        var description: String {
-            return self.rawValue
-        }
-        
-        var url: String {
-            return self.description
-        }
-    }
     
     private let dataStore: DataStore
     
@@ -28,7 +44,7 @@ class EditProjectAPI: BaseAPI {
         self.dataStore = dataStore
 
         
-        // MARK: /editProject
+        // MARK: .editor
         server[EditorUrl.editor.url] = { request, responseHeaders in
             
             guard let project = (self.dataStore.projects.first{ $0.id == request.queryParam("projectID") }) else {
@@ -39,16 +55,10 @@ class EditProjectAPI: BaseAPI {
             if let groupID = request.queryParam("groupID") {
                 activeGroup = project.findGroup(id: groupID)
             }
-
-            let template = self.getMainTemplate(request)
-            let userBadge = Template(raw: Resource.getAppResource(relativePath: "templates/userBadgeView.tpl"))
-            let avatarUrl = "https://www.gravatar.com/avatar/5ede5914f659676c0295d5282c1c9df9"
-            userBadge.assign("avatarUrl", avatarUrl)
-            template.assign("userBadge", userBadge.output())
             
             let container = Template(raw: Resource.getAppResource(relativePath: "templates/containerView.tpl"))
             container.assign(variables: ["title" : "Projekty"])
-            container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"/projects"], content: "Projekty")], inNest: "item")
+            container.assign(variables: ["title" : Template.htmlNode(type: "a", attributes: ["href":"#", "onclick":JSCode.loadBody(url: "/projects").js], content: "Projekty")], inNest: "item")
             container.assign(variables: ["title" : project.name], inNest: "item")
             
             let page = Template(raw: Resource.getAppResource(relativePath: "templates/projectEdit.tpl"))
@@ -67,12 +77,11 @@ class EditProjectAPI: BaseAPI {
             page.assign(variables: templateVariables)
             
             container.assign("page", page.output())
-            template.assign("page", container.output())
-            return template.asResponse()
+            return container.asResponse()
         }
         
-        // MARK: /editTreeMenu
-        server.GET["/editTreeMenu"] = { request, responseHeaders in
+        // MARK: .editorTreeMenu
+        server.GET[EditorUrl.editorTreeMenu.url] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
@@ -83,8 +92,8 @@ class EditProjectAPI: BaseAPI {
             return self.treeMenu(project: project, activeGroup: activeGroup).asResponse
         }
         
-        // MARK: /editCardsMenu
-        server.GET["/editCardsMenu"] = { request, responseHeaders in
+        // MARK: .editorCardsMenu
+        server.GET[EditorUrl.editorCardsMenu.url] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
@@ -95,8 +104,8 @@ class EditProjectAPI: BaseAPI {
             return self.cardsMenu(project: project, activeGroup: activeGroup).asResponse
         }
 
-        // MARK: /editorTable
-        server.GET["/editorTable"] = { request, responseHeaders in
+        // MARK: .editorTable
+        server.GET[EditorUrl.editorTable.url] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
@@ -109,8 +118,8 @@ class EditProjectAPI: BaseAPI {
             return self.parameterList(project: project, group: group).asResponse
         }
     
-        // MARK: /toggleGroupCanBeCopied
-        server.GET["/toggleGroupCanBeCopied"] = { request, responseHeaders in
+        // MARK: .editorGroupCopyableToggle
+        server.GET[EditorUrl.editorGroupCopyableToggle.url] = { request, responseHeaders in
             guard let project = (self.dataStore.projects.filter{ $0.id == request.queryParam("projectID") }.first) else {
                 return .notFound
             }
@@ -119,20 +128,20 @@ class EditProjectAPI: BaseAPI {
             return .noContent
         }
         
-        // MARK: /confirmGroupRemoval
-        server.GET["/confirmGroupRemoval"]  = { request, responseHeaders in
+        // MARK: .editorConfirmGroupRemoval
+        server.GET[EditorUrl.editorConfirmGroupRemoval.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
             let name = self.dataStore.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
 
             var html = "Czy na pewno chcesz usunąć grupę <b>\(name)</b>?<br><br>"
-            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: "/deleteGroup?projectID=\(projectID)&groupID=\(groupID)").js)\" class='btn btn-purple'>Potwierdzam</a> ")
+            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: EditorUrl.editorDeleteGroup.url.append("projectID", projectID).append("groupID", groupID)).js)\" class='btn btn-purple'>Potwierdzam</a> ")
             html.append("<a href='#' onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative'>Anuluj</a>")
             return self.wrapAsLayer(width: 500, title: "Usuwanie grupy", content: html).asResponse
         }
         
-        // MARK: /deleteGroup
-        server.GET["/deleteGroup"]  = { request, responseHeaders in
+        // MARK: .editorDeleteGroup
+        server.GET[EditorUrl.editorDeleteGroup.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let groupID = request.queryParam("groupID") else { return .notFound }
             
@@ -150,12 +159,12 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /addGroup
-        server.GET["/addGroup"]  = { request, responseHeaders in
+        // MARK: .editorAddGroup
+        server.GET[EditorUrl.editorAddGroup.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let activeGroupID = request.queryParam("activeGroupID") else { return .badRequest(nil) }
 
-            let form = Form(url: "/addGroup", method: "POST", ajax: true)
+            let form = Form(url: EditorUrl.editorAddGroup.url, method: "POST", ajax: true)
                 .addInputText(name: "name", label: "Nazwa Grupy", labelCSSClass: "text-gray font-13")
                 .addHidden(name: "projectID", value: projectID)
                 .addHidden(name: "groupID", value: activeGroupID)
@@ -164,7 +173,8 @@ class EditProjectAPI: BaseAPI {
             return .ok(.html(self.wrapAsLayer(width: 500, title: "Dodaj grupę", content: form.output())))
         }
         
-        server.POST["/addGroup"] = { request, responseHeaders in
+        // MARK: .editorAddGroup
+        server.POST[EditorUrl.editorAddGroup.url] = { request, responseHeaders in
             let formData = request.flatFormData()
             guard let project = (self.dataStore.projects.first{ $0.id == formData["projectID"] }) else {
                 return .notFound
@@ -194,13 +204,13 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /renameGroup
-        server.GET["/renameGroup"]  = { request, responseHeaders in
+        // MARK: .editorRenameGroup
+        server.GET[EditorUrl.editorRenameGroup.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
             let name = self.dataStore.projects.first{ $0.id == projectID }?.findGroup(id: groupID)?.name ?? ""
 
-            let form = Form(url: "/renameGroup", method: "POST", ajax: true)
+            let form = Form(url: EditorUrl.editorRenameGroup.url, method: "POST", ajax: true)
                 .addInputText(name: "name", label: "Nazwa Grupy", value: name, labelCSSClass: "text-gray font-13")
                 .addHidden(name: "projectID", value: projectID)
                 .addHidden(name: "groupID", value: groupID)
@@ -210,7 +220,8 @@ class EditProjectAPI: BaseAPI {
             return self.wrapAsLayer(width: 500, title: "Zmień nazwę grupy", content: form.output()).asResponse
         }
         
-        server.POST["/renameGroup"] = { request, responseHeaders in
+        // MARK: .editorRenameGroup
+        server.POST[EditorUrl.editorRenameGroup.url] = { request, responseHeaders in
             let formData = request.flatFormData()
             guard let project = (self.dataStore.projects.filter{ $0.id == formData["projectID"] }.first) else {
                 return .notFound
@@ -229,8 +240,8 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /moveGroup
-        server.GET["/moveGroup"] = { request, responseHeaders in
+        // MARK: .editorMoveGroup
+        server.GET[EditorUrl.editorMoveGroup.url] = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let groupID = request.queryParam("groupID") else { return .notFound }
             guard let direction = request.queryParam("direction") else { return .notFound }
@@ -265,26 +276,26 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /confirmQuestionRemoval
-        server.GET["/confirmQuestionRemoval"] = { request, responseHeaders in
+        // MARK: .editorConfirmQuestionRemoval
+        server.GET[EditorUrl.editorConfirmQuestionRemoval.url] = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let questionID = request.queryParam("questionID") else { return .badRequest(nil) }
             guard let question = (self.dataStore.projects.first{ $0.id == projectID }?.findQuestion(id: questionID)) else { return .badRequest(nil) }
             let name = question.label
 
             var html = "Czy na pewno chcesz usunąć parametr <b>\(name)</b>?<br><br>"
-            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: "/deleteQuestion?projectID=\(projectID)&questionID=\(questionID)").js)\" class='btn btn-purple'>Potwierdzam</a> ")
+            html.append("<a href='#' onclick=\"\(JSCode.loadScript(url: EditorUrl.editorDeleteQuestion.url.append("projectID", projectID).append("questionID", questionID)).js)\" class='btn btn-purple'>Potwierdzam</a> ")
             html.append("<a href='#' onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative'>Anuluj</a>")
             return self.wrapAsLayer(width: 500, title: "Usuwanie parametru", content: html).asResponse
         }
         
-        // MARK: /addQuestionStep1
-        server.GET["/addQuestionStep1"] = { request, responseHeaders in
+        // MARK: .editorAddQuestionStep1
+        server.GET[EditorUrl.editorAddQuestionStep1.url] = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let groupID = request.queryParam("groupID") else { return .badRequest(nil) }
 
             let questionTypeOptions = ProjectQuestionType.allCases.map{FormRadioModel(label: $0.title, value: $0.rawValue)}
-            let form = Form(url: "/addQuestionStep1", method: "POST", ajax: true)
+            let form = Form(url: EditorUrl.editorAddQuestionStep1.url, method: "POST", ajax: true)
                 .addInputText(name: "label", label: "Nazwa parametru", labelCSSClass: "text-gray font-20")
                 .addHidden(name: "projectID", value: projectID)
                 .addHidden(name: "groupID", value: groupID)
@@ -295,8 +306,8 @@ class EditProjectAPI: BaseAPI {
             return self.wrapAsLayer(width: 500, title: "Dodaj Parametr", content: form.output()).asResponse
         }
         
-        // MARK: /addQuestionStep1
-        server.POST["/addQuestionStep1"] = { request, responseHeaders in
+        // MARK: .editorAddQuestionStep1
+        server.POST[EditorUrl.editorAddQuestionStep1.url] = { request, responseHeaders in
             let formData = request.flatFormData()
             guard let projectID = formData["projectID"] else { return .notFound }
             guard let groupID = formData["groupID"] else { return .notFound }
@@ -308,12 +319,12 @@ class EditProjectAPI: BaseAPI {
 
             
             let js = JSResponse()
-            js.add(.loadAsLayer(url: "/addQuestionStep2?projectID=\(projectID)&groupID=\(groupID)&type=\(questionType.rawValue)&label=\(label)"))
+            js.add(.loadAsLayer(url: EditorUrl.editorAddQuestionStep2.url.append("projectID", projectID).append("groupID", groupID).append("type", questionType.rawValue).append("label", label)))
             return js.response
         }
 
-        // MARK: /addQuestionStep2
-        server.GET["/addQuestionStep2"] = { request, responseHeaders in
+        // MARK: .editorAddQuestionStep2
+        server.GET[EditorUrl.editorAddQuestionStep2.url] = { request, responseHeaders in
             
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let groupID = request.queryParam("groupID") else { return .notFound }
@@ -325,7 +336,7 @@ class EditProjectAPI: BaseAPI {
             let label = request.queryParam("label")?.removingPercentEncoding ?? "Brak nazwy"
             
             var html = ""
-            let url = "/addQuestionStep2"
+            let url = EditorUrl.editorAddQuestionStep2.url
             switch questionType {
 
             case .number:
@@ -375,8 +386,8 @@ class EditProjectAPI: BaseAPI {
         }
         
         
-        // MARK: /addQuestionStep2
-        server.POST["/addQuestionStep2"] = { request, responseHeaders in
+        // MARK: .editorAddQuestionStep2
+        server.POST[EditorUrl.editorAddQuestionStep2.url] = { request, responseHeaders in
             let formData = request.flatFormData()
             guard let projectID = formData["projectID"] else { return .notFound }
             guard let groupID = formData["groupID"] else { return .notFound }
@@ -408,8 +419,8 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /deleteQuestion
-        server.GET["/deleteQuestion"]  = { request, responseHeaders in
+        // MARK: .editorDeleteQuestion
+        server.GET[EditorUrl.editorDeleteQuestion.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let questionID = request.queryParam("questionID") else { return .notFound }
             
@@ -428,8 +439,8 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
-        // MARK: /moveQuestion
-        server.GET["/moveQuestion"] = { request, responseHeaders in
+        // MARK: .editorMoveQuestion
+        server.GET[EditorUrl.editorMoveQuestion.url] = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let questionID = request.queryParam("questionID") else { return .notFound }
             guard let direction = request.queryParam("direction") else { return .notFound }
@@ -464,19 +475,19 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
 
-        // MARK: /dictionaryList
-        server.GET["/dictionaryList"]  = { request, responseHeaders in
+        // MARK: .editorDictionaryList
+        server.GET[EditorUrl.editorDictionaryList.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
             }
     
             let list = Template(raw: Resource.getAppResource(relativePath: "templates/dictionaryList.tpl"))
-            list.assign("createDictionaryJS", JSCode.loadAsLayer(url: "/addDictionary?projectID=\(projectID)").js)
+            list.assign("createDictionaryJS", JSCode.loadAsLayer(url: EditorUrl.editorAddDictionary.url.append("projectID", projectID)).js)
             for dictionary in project.dictionaries {
                 var data: [String:String] = [:]
                 data["name"] = dictionary.name
-                data["previewClick"] = JSCode.loadAsLayer(url: "/dictionaryPreview?projectID=\(project.id)&preview=\(dictionary.id)").js
+                data["previewClick"] = JSCode.loadAsLayer(url: EditorUrl.editorDictionaryPreview.url.append("projectID", project.id).append("preview", dictionary.id)).js
                 data["dictionaryID"] = dictionary.id
                 list.assign(variables: data, inNest: "dictionary")
             }
@@ -484,8 +495,8 @@ class EditProjectAPI: BaseAPI {
             return list.asResponse()
         }
         
-        // MARK: /dictionaryPreview
-        server.GET["/dictionaryPreview"]  = { request, responseHeaders in
+        // MARK: .editorDictionaryPreview
+        server.GET[EditorUrl.editorDictionaryPreview.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
@@ -496,14 +507,14 @@ class EditProjectAPI: BaseAPI {
             return self.wrapAsLayer(width: 600, title: dictionary.name, content: self.dictionaryPreview(project: project, dictionary: dictionary)).asResponse
         }
         
-        //MARK: /addDictionary
-        server.GET["/addDictionary"]  = { request, responseHeaders in
+        //MARK: .editorAddDictionary
+        server.GET[EditorUrl.editorAddDictionary.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
                 return .notFound
             }
                 
-            let form = Form(url: "/addDictionary", method: "POST", ajax: true)
+            let form = Form(url: EditorUrl.editorAddDictionary.url, method: "POST", ajax: true)
                 .addInputText(name: "name", label: "", labelCSSClass: "text-gray font-20")
                 .addHidden(name: "projectID", value: project.id)
                 .addSeparator(txt: "Podaj wartości, jakie użytkownik będzie miał do wyboru")
@@ -515,7 +526,7 @@ class EditProjectAPI: BaseAPI {
             
             var attributes: [String:String] = [:]
             attributes["class"] = "btn btn-purple"
-            attributes["onclick"] = "$('<div>').load('/addDictionaryOption', function() { $('#moreOptions').append($(this).html());});"
+            attributes["onclick"] = "$('<div>').load('\(EditorUrl.editorAddDictionaryOption.url)', function() { $('#moreOptions').append($(this).html());});"
             form.addRaw(html: Template.htmlNode(type: "span", attributes: attributes, content: "+ Dodaj kolejną wartość wyboru"))
                 .addRaw(html: "<hr>")
                 .addSubmit(name: "submit", label: "Dodaj")
@@ -524,8 +535,8 @@ class EditProjectAPI: BaseAPI {
             return self.wrapAsLayer(width: 600, title: "Dodaj nowy słownik", content: form.output()).asResponse
         }
 
-        //MARK: /addDictionaryOption
-        server.GET["/addDictionaryOption"]  = { request, responseHeaders in
+        //MARK: .editorAddDictionaryOption
+        server.GET[EditorUrl.editorAddDictionaryOption.url]  = { request, responseHeaders in
             let template = Template(raw: Resource.getAppResource(relativePath: "templates/form.tpl"))
             
             var variables: [String:String] = [:]
@@ -534,8 +545,8 @@ class EditProjectAPI: BaseAPI {
             return template.asResponse()
         }
 
-        //MARK: /addDictionary
-        server.POST["/addDictionary"]  = { request, responseHeaders in
+        //MARK: .editorAddDictionary
+        server.POST[EditorUrl.editorAddDictionary.url]  = { request, responseHeaders in
             let formData = request.flatFormData()
             guard let projectID = formData["projectID"] else { return .notFound }
             guard let project = (self.dataStore.projects.first{ $0.id == projectID }) else {
@@ -576,7 +587,7 @@ class EditProjectAPI: BaseAPI {
         cardGroup["href"] = "#"
         
         if activeGroup?.questions.isEmpty ?? true {
-            cardGroup["onclick"] = JSCode.loadAsLayer(url: "/addGroup?activeGroupID=\(activeGroup?.id ?? "")&projectID=\(project.id)").js
+            cardGroup["onclick"] = JSCode.loadAsLayer(url: EditorUrl.editorAddGroup.url.append("projectID", project.id).append("activeGroupID", activeGroup?.id ?? "")).js
         } else {
             cardGroup["disabled"] = "disabled"
         }
@@ -587,7 +598,7 @@ class EditProjectAPI: BaseAPI {
         cardParameter["desc"] = "Pytanie możn dodać tylko wtedy, gdy w danej podgrupie nie są dodane podgrupy pytań"
         cardParameter["href"] = "#"
         if let group = activeGroup, group.groups.isEmpty {
-            cardParameter["onclick"] = JSCode.loadAsLayer(url: "/addQuestionStep1?groupID=\(group.id)&projectID=\(project.id)").js
+            cardParameter["onclick"] = JSCode.loadAsLayer(url: EditorUrl.editorAddQuestionStep1.url.append("projectID", project.id).append("groupID", group.id)).js
         } else {
             cardParameter["disabled"] = "disabled"
         }
@@ -615,9 +626,9 @@ class EditProjectAPI: BaseAPI {
                 data["unit"] = Template.htmlNode(type: "span", attributes: ["class":"label label-green"], content: unit)
             }
             data["questionID"] = question.id
-            data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmQuestionRemoval?questionID=\(question.id)&projectID=\(project.id)").js
-            data["moveUpClick"] = JSCode.loadScript(url: "/moveQuestion?questionID=\(question.id)&projectID=\(project.id)&direction=up").js
-            data["moveDownClick"] = JSCode.loadScript(url: "/moveQuestion?questionID=\(question.id)&projectID=\(project.id)&direction=down").js
+            data["onclickDelete"] = JSCode.loadAsLayer(url: EditorUrl.editorConfirmQuestionRemoval.url.append("projectID", project.id).append("questionID", question.id)).js
+            data["moveUpClick"] = JSCode.loadScript(url: EditorUrl.editorMoveQuestion.url.append("projectID", project.id).append("questionID", question.id).append("direction", "up")).js
+            data["moveDownClick"] = JSCode.loadScript(url: EditorUrl.editorMoveQuestion.url.append("projectID", project.id).append("questionID", question.id).append("direction", "down")).js
 
             
             switch question.dataType {
@@ -643,11 +654,11 @@ class EditProjectAPI: BaseAPI {
             data["name"] = group.name
             data["groupID"] = group.id
             data["openGroupJS"] = JSCode.editorLoadGroup(projectID: project.id, groupID: group.id).js
-            data["onclickDelete"] = JSCode.loadAsLayer(url: "/confirmGroupRemoval?groupID=\(group.id)&projectID=\(project.id)").js
-            data["onclickRename"] = JSCode.loadAsLayer(url: "/renameGroup?groupID=\(group.id)&projectID=\(project.id)").js
-            data["toggleCopyUrl"] = "/toggleGroupCanBeCopied?projectID=\(project.id)&groupID=\(group.id)"
-            data["moveUpClick"] = JSCode.loadScript(url: "/moveGroup?groupID=\(group.id)&projectID=\(project.id)&direction=up").js
-            data["moveDownClick"] = JSCode.loadScript(url: "/moveGroup?groupID=\(group.id)&projectID=\(project.id)&direction=down").js
+            data["onclickDelete"] = JSCode.loadAsLayer(url: EditorUrl.editorConfirmGroupRemoval.url.append("projectID", project.id).append("groupID", group.id)).js
+            data["onclickRename"] = JSCode.loadAsLayer(url: EditorUrl.editorRenameGroup.url.append("projectID", project.id).append("groupID", group.id)).js
+            data["toggleCopyUrl"] = EditorUrl.editorGroupCopyableToggle.url.append("projectID", project.id).append("groupID", group.id)
+            data["moveUpClick"] = JSCode.loadScript(url: EditorUrl.editorMoveGroup.url.append("projectID", project.id).append("groupID", group.id).append("direction", "up")).js
+            data["moveDownClick"] = JSCode.loadScript(url: EditorUrl.editorMoveGroup.url.append("projectID", project.id).append("groupID", group.id).append("direction", "down")).js
             data["checked"] = group.canBeCopied ? "checked" : ""
             table.assign(variables: data, inNest: "group")
         }

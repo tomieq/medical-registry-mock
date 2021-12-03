@@ -75,7 +75,7 @@ class AuthAPI: BaseAPI {
             self.dataStore.projects.forEach { project in
                 var data = [String:String]()
                 data["name"] = project.name
-                data["onclick"] = JSCode.loadBody(url: EditProjectAPI.EditorUrl.editor.url.append("projectID", project.id)).js
+                data["onclick"] = JSCode.loadPage(url: EditorUrl.editor.url.append("projectID", project.id)).js
                 data["status"] = project.status.title
                 list.assign(variables: data, inNest: "project")
             }
