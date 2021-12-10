@@ -389,6 +389,16 @@ class EditProjectAPI: BaseAPI {
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
                 html = form.output()
+            case .date:
+                let form = Form(url: url, method: "POST", ajax: true)
+                    .addHidden(name: "label", value: label)
+                    .addHidden(name: "type", value: questionType.rawValue)
+                    .addHidden(name: "projectID", value: project.id)
+                    .addHidden(name: "groupID", value: groupID)
+                    .addInputText(name: "dateFormat", label: "Format zapisanej daty", value: "YYYY-mm-dd")
+                    .addSubmit(name: "submit", label: "Dodaj")
+                    .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
+                html = form.output()
             case .unknown:
                 break
             }

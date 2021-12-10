@@ -118,7 +118,7 @@ extension ProjectGroup: Comparable {
 }
 
 enum ProjectQuestionType: String, CaseIterable {
-    static var allCases: [ProjectQuestionType] = [.text, .longText, .number, .singleSelectDictionary, .multiSelectDictionary]
+    static var allCases: [ProjectQuestionType] = [.text, .longText, .number, .singleSelectDictionary, .multiSelectDictionary, .date]
     
     case unknown
     case text
@@ -126,6 +126,7 @@ enum ProjectQuestionType: String, CaseIterable {
     case number
     case singleSelectDictionary
     case multiSelectDictionary
+    case date
     
     var title: String {
         switch self {
@@ -140,7 +141,9 @@ enum ProjectQuestionType: String, CaseIterable {
         case .singleSelectDictionary:
             return "Pole jednokrotnego wyboru ze słownika"
         case .multiSelectDictionary:
-            return "Pole jednokrotnego wyboru ze słownika"
+            return "Pole wielokrotnego wyboru ze słownika"
+        case .date:
+            return "Data"
         }
     }
 }
