@@ -29,6 +29,7 @@ enum EditorUrl: String, CaseIterable {
     case editorDictionaryPreview
     case editorAddDictionary
     case editorAddDictionaryOption
+    case editorRenameDictionary
     
     var url: String {
         return "/e\(EditorUrl.map[self] ?? self.rawValue)"
@@ -533,6 +534,7 @@ class EditProjectAPI: BaseAPI {
                 var data: [String:String] = [:]
                 data["name"] = dictionary.name
                 data["previewClick"] = JSCode.loadAsLayer(url: EditorUrl.editorDictionaryPreview.url.append("projectID", project.id).append("preview", dictionary.id)).js
+                data["renameClick"] = JSCode.loadAsLayer(url: EditorUrl.editorRenameDictionary.url.append("projectID", project.id).append("dictionaryID", dictionary.id)).js
                 data["dictionaryID"] = dictionary.id
                 list.assign(variables: data, inNest: "dictionary")
             }
@@ -619,6 +621,66 @@ class EditProjectAPI: BaseAPI {
             let js = JSResponse()
             js.add(.closeLayer)
             js.add(.editorLoadDictionaryList(projectID: projectID))
+            return js.response
+        }
+
+        // MARK: .editorRenameDictionary
+        server.GET[EditorUrl.editorRenameDictionary.url]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let dictionaryID = request.queryParam("dictionaryID") else { return .badRequest(nil) }
+            guard let dictionary = (self.dataStore.projects.first{$0.id == projectID}?.dictionaries.first{$0.id == dictionaryID}) else { return .notFound }
+            
+            let name = dictionary.name
+
+            let form = Form(url: EditorUrl.editorRenameDictionary.url, method: "POST", ajax: true)
+                .addInputText(name: "name", label: "Nazwa", value: name, labelCSSClass: "text-gray font-13")
+                .addHidden(name: "projectID", value: projectID)
+                .addHidden(name: "dictionaryID", value: dictionaryID)
+            
+            var html = "Opcje:<br>"
+            for option in dictionary.options {
+                html.append(Template.htmlNode(type: "li", content: option.title))
+            }
+            form.addRaw(html: html)
+            form.addRaw(html: "<div id='moreOptions'></div>")
+            
+            var attributes: [String:String] = [:]
+            attributes["class"] = "btn btn-purple"
+            attributes["onclick"] = "$('<div>').load('\(EditorUrl.editorAddDictionaryOption.url)', function() { $('#moreOptions').append($(this).html());});"
+            form.addRaw(html: Template.htmlNode(type: "span", attributes: attributes, content: "+ Dodaj kolejną wartość wyboru"))
+                .addRaw(html: "<hr>")
+                .addSubmit(name: "submit", label: "Zmień")
+                .addRaw(html: "<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
+
+            return self.wrapAsLayer(width: 500, title: "Edycja słownika", content: form.output()).asResponse
+        }
+        
+        // MARK: .editorRenameDictionary
+        server.POST[EditorUrl.editorRenameDictionary.url] = { request, responseHeaders in
+            let formData = request.flatFormData()
+            guard let project = (self.dataStore.projects.filter{ $0.id == formData["projectID"] }.first) else {
+                return .notFound
+            }
+            guard let dictionaryID = formData["dictionaryID"], let dictionary = (project.dictionaries.first{$0.id == dictionaryID}) else { return .notFound }
+            
+            dictionary.name = "bez nazwy"
+            if let name = formData["name"], !name.isEmpty {
+                dictionary.name = name
+            }
+            let urlencodedForm = request.parseUrlencodedForm()
+            let options = urlencodedForm.filter{$0.0 == "option[]"}.map{$0.1}
+
+            for name in options {
+                if !name.isEmpty {
+                    let option = ProjectDictionaryOption()
+                    option.title = name
+                    dictionary.options.append(option)
+                }
+            }
+            
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.editorLoadDictionaryList(projectID: project.id))
             return js.response
         }
     }

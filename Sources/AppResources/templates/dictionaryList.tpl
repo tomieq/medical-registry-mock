@@ -22,6 +22,7 @@
                   </button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{dictionaryID}">
                     <a class="dropdown-item font-14 text-light-gray" href="#" onclick="{previewClick}">Podgląd</a>
+                    <a class="dropdown-item font-14 text-light-gray" href="#" onclick="{renameClick}">Edycja</a>
                   </div>
                 </div>
               </td>
