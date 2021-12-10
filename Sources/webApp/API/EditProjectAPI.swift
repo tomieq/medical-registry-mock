@@ -346,13 +346,10 @@ class EditProjectAPI: BaseAPI {
             }
             let label = request.queryParam("label")?.removingPercentEncoding ?? "Brak nazwy"
             
-            var html = ""
-            let url = EditorUrl.editorAddQuestionStep2.url
+            let form = Form(url: EditorUrl.editorAddQuestionStep2.url, method: "POST", ajax: true)
             switch questionType {
-
             case .number:
-                let form = Form(url: url, method: "POST", ajax: true)
-                    .addHidden(name: "label", value: label)
+                    form.addHidden(name: "label", value: label)
                     .addHidden(name: "type", value: questionType.rawValue)
                     .addHidden(name: "projectID", value: project.id)
                     .addHidden(name: "groupID", value: groupID)
@@ -363,10 +360,9 @@ class EditProjectAPI: BaseAPI {
                     .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
-                html = form.output()
+
             case .singleSelectDictionary, .multiSelectDictionary:
-                let form = Form(url: url, method: "POST", ajax: true)
-                    .addHidden(name: "label", value: label)
+                    form.addHidden(name: "label", value: label)
                     .addHidden(name: "type", value: questionType.rawValue)
                     .addHidden(name: "projectID", value: project.id)
                     .addHidden(name: "groupID", value: groupID)
@@ -374,12 +370,10 @@ class EditProjectAPI: BaseAPI {
                     .addRadio(name: "dictionaryID", label: "Wybierz zbiór danych słownikowych z jakich można wybrać odpowiedź", options: project.dictionaries.map{ FormRadioModel(label: $0.name, value: $0.id) })
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
-                html = form.output()
             case .longText:
                 fallthrough
             case .text:
-                let form = Form(url: url, method: "POST", ajax: true)
-                    .addHidden(name: "label", value: label)
+                    form.addHidden(name: "label", value: label)
                     .addHidden(name: "type", value: questionType.rawValue)
                     .addHidden(name: "projectID", value: project.id)
                     .addHidden(name: "groupID", value: groupID)
@@ -388,22 +382,19 @@ class EditProjectAPI: BaseAPI {
                     .addSeparator(txt: "Jeśli chcesz, aby przy pytaniu była jednostka, wpisz ją w pole powyżej")
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
-                html = form.output()
             case .date:
-                let form = Form(url: url, method: "POST", ajax: true)
-                    .addHidden(name: "label", value: label)
+                    form.addHidden(name: "label", value: label)
                     .addHidden(name: "type", value: questionType.rawValue)
                     .addHidden(name: "projectID", value: project.id)
                     .addHidden(name: "groupID", value: groupID)
                     .addInputText(name: "dateFormat", label: "Format zapisanej daty", value: "YYYY-mm-dd")
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
-                html = form.output()
             case .unknown:
                 break
             }
             
-            return self.wrapAsLayer(width: 500, title: "Dodaj Parametr", content: html).asResponse
+            return self.wrapAsLayer(width: 500, title: "Dodaj Parametr", content: form.output()).asResponse
         }
         
         
