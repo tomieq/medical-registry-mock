@@ -26,6 +26,7 @@
                     <i data-feather="more-vertical" class="mx-2" style="height: 16px;"></i>
                   </button>
                   <div class="dropdown-menu" aria-labelledby="q{questionID}">
+                    <a class="dropdown-item font-14 text-light-gray "href="#" onclick="{onclickRename}">Edytuj</a>
                     <a class="dropdown-item font-14 text-light-gray "href="#" onclick="{onclickDelete}">Usuń</a>
                   </div>
                 </div>

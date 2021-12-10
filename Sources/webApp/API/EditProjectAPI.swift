@@ -22,6 +22,7 @@ enum EditorUrl: String, CaseIterable {
     case editorConfirmQuestionRemoval
     case editorAddQuestionStep1
     case editorAddQuestionStep2
+    case editorRenameQuestion
     case editorDeleteQuestion
     case editorMoveQuestion
     case editorDictionaryList
@@ -428,6 +429,41 @@ class EditProjectAPI: BaseAPI {
             return js.response
         }
         
+        // MARK: .editorRenameQuestion
+        server.GET[EditorUrl.editorRenameQuestion.url]  = { request, responseHeaders in
+            guard let projectID = request.queryParam("projectID") else { return .badRequest(nil) }
+            guard let questionID = request.queryParam("questionID") else { return .badRequest(nil) }
+            let name = self.dataStore.projects.first{ $0.id == projectID }?.findQuestion(id: questionID)?.label ?? "Bez nazwy"
+
+            let form = Form(url: EditorUrl.editorRenameQuestion.url, method: "POST", ajax: true)
+                .addInputText(name: "name", label: "Nazwa Parametru", value: name, labelCSSClass: "text-gray font-13")
+                .addHidden(name: "projectID", value: projectID)
+                .addHidden(name: "questionID", value: questionID)
+                .addSubmit(name: "submit", label: "Zmień")
+                .addRaw(html: "<a href='#' onclick='closeLayer()' class='btn btn-purple-negative'>Anuluj</a>")
+
+            return self.wrapAsLayer(width: 500, title: "Zmień nazwę parametru", content: form.output()).asResponse
+        }
+        
+        // MARK: .editorRenameQuestion
+        server.POST[EditorUrl.editorRenameQuestion.url] = { request, responseHeaders in
+            let formData = request.flatFormData()
+            guard let project = (self.dataStore.projects.filter{ $0.id == formData["projectID"] }.first) else {
+                return .notFound
+            }
+            guard let questionID = formData["questionID"], let question = project.findQuestion(id: questionID) else { return .notFound }
+            
+            question.label = "bez nazwy"
+            if let name = formData["name"], !name.isEmpty {
+                question.label = name
+            }
+            let parentGroupID = project.parentGroup(id: questionID)?.id ?? ""
+            let js = JSResponse()
+            js.add(.closeLayer)
+            js.add(.editorLoadGroupTable(projectID: project.id, groupID: parentGroupID))
+            return js.response
+        }
+
         // MARK: .editorDeleteQuestion
         server.GET[EditorUrl.editorDeleteQuestion.url]  = { request, responseHeaders in
             guard let projectID = request.queryParam("projectID") else { return .notFound }
@@ -636,6 +672,7 @@ class EditProjectAPI: BaseAPI {
             }
             data["questionID"] = question.id
             data["onclickDelete"] = JSCode.loadAsLayer(url: EditorUrl.editorConfirmQuestionRemoval.url.append("projectID", project.id).append("questionID", question.id)).js
+            data["onclickRename"] = JSCode.loadAsLayer(url: EditorUrl.editorRenameQuestion.url.append("projectID", project.id).append("questionID", question.id)).js
             data["moveUpClick"] = JSCode.loadScript(url: EditorUrl.editorMoveQuestion.url.append("projectID", project.id).append("questionID", question.id).append("direction", "up")).js
             data["moveDownClick"] = JSCode.loadScript(url: EditorUrl.editorMoveQuestion.url.append("projectID", project.id).append("questionID", question.id).append("direction", "down")).js
 
