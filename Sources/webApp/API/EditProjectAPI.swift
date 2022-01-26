@@ -387,7 +387,7 @@ class EditProjectAPI: BaseAPI {
                     .addHidden(name: "type", value: questionType.rawValue)
                     .addHidden(name: "projectID", value: project.id)
                     .addHidden(name: "groupID", value: groupID)
-                    .addInputText(name: "dateFormat", label: "Format zapisanej daty", value: "YYYY-mm-dd")
+                    .addRadio(name: "dateType", label: "Wybierz typ daty do wprowadzenia", options: DateType.allCases.map{ FormRadioModel(label: $0.visibleName, value: $0.rawValue) })
                     .addSubmit(name: "submit", label: "Dodaj")
                     .addRaw(html: "<span onclick='\(JSCode.closeLayer.js)' class='btn btn-purple-negative hand'>Anuluj</span>")
             case .unknown:
@@ -419,6 +419,7 @@ class EditProjectAPI: BaseAPI {
             question.minValue = formData["minValue"]?.toInt()
             question.dictionaryID = formData["dictionaryID"]
             question.unit = formData["unit"]
+            question.dateType = DateType(rawValue: formData["dateType"] ?? "")
             
             if question.label.isEmpty { question.label = "Brak nazwy" }
             group.questions.append(question)

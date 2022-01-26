@@ -169,6 +169,24 @@ class ProjectDictionaryOption: Equatable {
     }
 }
 
+enum DateType: String, CaseIterable {
+    case year
+    case yearMonth
+    case yearMonthDay
+    
+    var visibleName: String {
+        switch self {
+            
+        case .year:
+            return "Rok"
+        case .yearMonth:
+            return "Rok + miesiąc"
+        case .yearMonthDay:
+            return "Rok + miesiąc + dzień"
+        }
+    }
+}
+
 class ProjectQuestion {
     let id: String = UUID().uuidString
     let createDate = Date()
@@ -178,6 +196,7 @@ class ProjectQuestion {
     var minValue: Int?
     var maxValue: Int?
     var dictionaryID: String?
+    var dateType: DateType?
     var unit: String?
     var sequence = 0
 }
